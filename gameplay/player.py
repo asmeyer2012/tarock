@@ -1,4 +1,7 @@
 
+"""
+I have no idea what I am doing
+"""
 class Player:
   def __init__(self,name):
     self.name = name

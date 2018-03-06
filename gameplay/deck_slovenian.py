@@ -24,7 +24,7 @@ class slovenianDeck:
         self.deck.append( Card(name, CardSuit.HEART) )
         self.deck.append( Card(name, CardSuit.SPADE) )
         self.deck.append( Card(name, CardSuit.DIAMOND) )
-    ## unitary check
+    ## unitarity check
     if len(self.deck) != 54:
       for i,card in enumerate(self.deck):
         print card.name, card.suit

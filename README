@@ -1,0 +1,35 @@
+## README
+
+Currently three separate, independent codes. Eventually they will be merged.
+These are really the three pieces that are necessary to get everything in place.
+
+---
+
+First is the gameplay code. This is cards/players/rules/etc. Normal python code.
+ As far as I can tell, best implementation strategy is to have rules handled independently
+ by each contract, and each contract as its own python class.
+ The contracts should all have identical function names, i.e. a C++ virtual class-like
+ implementation. That way there's no need to have contract-dependent clauses in the
+ main gameplay code, or for every card in the deck. When a round is complete,
+ contract class does scoring and passes results back to players before going to garbage collection.
+
+Second is interface. This uses the curses package to allow for more fine-tuned control
+ of screen printout. I wanted to avoid scrolling text printouts. 
+ I've implemented a message board-like feature with this for practice.
+ Eventually, this will handle all of the command-line stuff for actually playing the game.
+ This also allows for colors, so I can make a super gaudy welcome animation with ascii art.
+
+Third is communication. This is handled by pyro. This is a server that all the independent
+ python processes for each player need to connect to to communicate with each other.
+
+---
+
+Basic idea is to connect everyone to same ssh server. When they connect, python
+ process starts which connects to pyro server. Pyro server does message passing between
+ processes, including external text messages between players as well as internal messaging
+ to control gameplay.
+
+Hosting I'll eventually do on my Raspberry Pi, depending on whether it's fast enough to handle
+ this. If not, I'll see about setting up a dummy account on my desktop that only has enough
+ privilege to run this python script.
+

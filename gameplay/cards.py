@@ -37,6 +37,7 @@ class CardName(Enum):
 Card suits
 """
 class CardSuit(Enum):
+  ## eventually these will be colored differently in curses
   UNDEFINED = -1
   TRUMP = 0
   CLUB = 1
@@ -53,9 +54,11 @@ class Card:
     self.suit = suit
     self.player = None
     pass
+  ## need to know who played the card
   def assignPlayer(self,player):
     self.player = player
     pass
+  ## clean printing
   def printCard(self):
     return ( '%8s %10s' % (self.suit.name, self.name.name) )
 
