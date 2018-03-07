@@ -28,8 +28,6 @@ def timeout(seconds=10, error_message=os.strerror(errno.ETIME)):
 
     return decorator
 
-stdscr = curses.initscr()
-
 ## handle passing messages between people
 class MessageWindow:
   def __init__(self):
@@ -39,8 +37,11 @@ class MessageWindow:
     self.preString = '> '
     self.win = curses.newwin(self.nlines,curses.COLS,self.offset,0)
     self.lines = list()
+
   def addLine(self,name,line):
     if line == '':
+      self.bottomOfDisplay()
+      self.displayWindow()
       return
     line = ('%-8s> ' % name) + line ## prepend name
     ## check if line is longer than window
@@ -51,21 +52,32 @@ class MessageWindow:
       ## if not at the end, keep the window where it was!
       if self.ndisp > 0:
         self.ndisp += 1
+    self.bottomOfDisplay()
     self.displayWindow()
-  def incrementDisplay(self):
-    self.ndisp = min( self.ndisp+1, len(self.lines) )
-  def decrementDisplay(self):
+
+  ## self.ndisp counts number of lines from bottom
+  def incrementDisplay(self): ## shift messages down
+    self.ndisp = min( self.ndisp+1, len(self.lines)-self.nlines )
+    self.displayWindow()
+  def decrementDisplay(self): ## shift messages up
     self.ndisp = max( self.ndisp-1, 0 )
+    self.displayWindow()
+  def bottomOfDisplay(self): ## go to end
+    self.ndisp = 0
+    self.displayWindow()
+
   def displayWindow(self):
     self.win.clear()
-    if len(self.lines) <= self.nlines:
+    if len(self.lines) <= self.nlines: ## when not enough lines to fill screen
       for i,line in enumerate(self.lines):
         self.win.addstr(i,0,line)
-    elif self.ndisp == 0:
+    elif self.ndisp == 0: ## when display is at most recent message
       for i,line in enumerate(self.lines[-self.nlines:]):
         self.win.addstr(i,0,line)
-    else:
-      for i,line in enumerate(self.lines[-self.ndisp-self.nlines:-self.ndisp]):
+    else: ## when display is not at most recent message
+      #for i,line in enumerate(self.lines[-self.ndisp-self.nlines:-self.ndisp]):
+      for i,line in enumerate(self.lines[\
+        -self.ndisp-self.nlines: max(-self.ndisp,self.nlines-len(self.lines)) ]):
         self.win.addstr(i,0,line)
     self.win.refresh()
 
@@ -84,8 +96,7 @@ class CommandWindow:
     self.offset = 22
     self.win = curses.newwin(1,curses.COLS,self.offset,0)
     pass
-  #def connectMessageWindow(self,msgWin):
-  #  self.msgWin = msgWin
+
   def getNextKey(self,stdscr):
     try:
       return timeoutGetKey(stdscr)
@@ -103,10 +114,17 @@ class CommandWindow:
       nextKey = self.getNextKey(stdscr)
       if   nextKey is None:
         continue
+      elif nextKey == 'KEY_UP': ## move messages up to display later messages
+        self.msgWin.incrementDisplay()
+        pass
+      elif nextKey == 'KEY_DOWN': ## move messages down to display earlier messages
+        self.msgWin.decrementDisplay()
+        pass
       elif nextKey == '\n': ## start writing a message
         if self.msgWin is None:
           raise ValueError("message window not set!")
         self.messageLoop(stdscr)
+      ## how do I escape?
 
   ## in message mode, get a message
   def messageLoop(self,stdscr):
@@ -118,14 +136,13 @@ class CommandWindow:
       nextKey = self.getNextKey(stdscr)
       if   nextKey is None:
         continue
-      elif nextKey == '\n': ## finish up and quit
+      elif nextKey == '\n': ## display current text in message window and exit message mode
         self.msgWin.addLine(self.name,line+lineend)
-        #for i in range(self.offset,curses.LINES-1):
         for i in range(curses.LINES-1,self.offset-1,-1):
           stdscr.move(i,0)
           stdscr.deleteln()
         break
-      elif nextKey == 'KEY_BACKSPACE':
+      elif nextKey == 'KEY_BACKSPACE': ## delete previous character
         ## because of echo, backspace also moves cursor
         y,x = stdscr.getyx()
         if x > len(self.msgWin.preString)-1:
@@ -134,7 +151,13 @@ class CommandWindow:
         else:
          stdscr.move(y,x+1) ## undo backspace move
          pass
-      elif nextKey == 'KEY_RIGHT':
+      elif nextKey == 'KEY_UP': ## move messages up to display later messages
+        self.msgWin.incrementDisplay()
+        pass
+      elif nextKey == 'KEY_DOWN': ## move messages down to display earlier messages
+        self.msgWin.decrementDisplay()
+        pass
+      elif nextKey == 'KEY_RIGHT': ## move cursor to right
         if lineend == '':
           continue
         line = line + lineend[0]
@@ -142,7 +165,7 @@ class CommandWindow:
         y,x = stdscr.getyx()
         if x < curses.COLS:
           stdscr.move(y,x+1) 
-      elif nextKey == 'KEY_LEFT':
+      elif nextKey == 'KEY_LEFT': ## move cursor to left
         if line == '':
           continue
         lineend = line[-1] + lineend
@@ -152,13 +175,14 @@ class CommandWindow:
           stdscr.move(y,x-1) 
       elif len(nextKey) > 1: ## special keys mostly
         pass
-      else:
+      else: ## pleb typing
         line = line + str(nextKey)
         y,x = stdscr.getyx()
         stdscr.addstr(y,x,lineend)
         stdscr.move(y,x)
     curses.noecho()
 
-cmdWin = CommandWindow('aaron')
-curses.wrapper(cmdWin.idleLoop)
+#stdscr = curses.initscr()
+#cmdWin = CommandWindow('aaron')
+#curses.wrapper(cmdWin.idleLoop)
 
