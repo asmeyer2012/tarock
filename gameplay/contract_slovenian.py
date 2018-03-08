@@ -57,19 +57,19 @@ class slovenianGeneric:
     pass
 
   def legalLead(self, hand):
-    return 1  #all cards are legal to lead under this contract
+    return True  #all cards are legal to lead under this contract
 
   def legalFollow(self, hand, card, lead):
-    if card.suit == lead.suit #followed suit
-      return 1
+    if card.suit == lead.suit: #followed suit
+      return True
     else:
       suitList,nameList = hand.getFlat()
-      if lead.suit in suitList #should have followed suit
-        return 0
-      elif card.suit == CardSuit.TRUMP #trumped    
-        return 1
-      elif CardSuit.TRUMP in suitList #should have trumped
-        return 0
+      if lead.suit in suitList: #should have followed suit
+        return False
+      elif card.suit == CardSuit.TRUMP: #trumped    
+        return True
+      elif CardSuit.TRUMP in suitList: #should have trumped
+        return False
       else: # could not trump
-        return 1
+        return True
 

@@ -29,5 +29,12 @@ class Contract:
   def __init__(self,name):
     self.name = name
     self.announcements = list()
-    self.contra = 1
+    self.kontra = 1
+    self.compulsoryklop = False # Flag for next hand
     pass
+
+  def kontra():
+    if self.kontra < 16:
+      self.kontra *= 2
+    else:
+      print "Enough with the kontras already"
