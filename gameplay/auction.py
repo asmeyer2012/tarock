@@ -20,9 +20,9 @@ class ContractName(Enum):
 
 class Announcements(Enum):
   TRULA = 0
-  KING_ULTIMO = 1
-  KINGS = 2
-  PAGALT_ULTIMO = 3
+  KINGS = 1
+  PAGAT_ULTIMO = 2
+  KING_ULTIMO = 3
   VALAT = 4
 
 class Contract:
