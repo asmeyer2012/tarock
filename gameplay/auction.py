@@ -9,20 +9,20 @@ class ContractName(Enum):
   THREE = 10
   TWO = 20
   ONE = 30
-  SOLO THREE = 40
-  SOLO TWO = 50
-  SOLO ONE = 60
+  SOLO_THREE = 40
+  SOLO_TWO = 50
+  SOLO_ONE = 60
   BEGGAR = 70
-  SOLO WITHOUT = 80
-  OPEN BEGGAR = 90
-  COLOR VALAT = 125
+  SOLO_WITHOUT = 80
+  OPEN_BEGGAR = 90
+  COLOR_VALAT = 125
   VALAT = 250
 
 class Announcements(Enum):
   TRULA = 0
-  KING ULTIMO = 1
+  KING_ULTIMO = 1
   KINGS = 2
-  PAGALT ULTIMO = 3
+  PAGALT_ULTIMO = 3
   VALAT = 4
 
 class Contract:
