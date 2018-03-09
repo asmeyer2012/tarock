@@ -76,7 +76,7 @@ class klop:
   def legalFollow(self, hand, card, trick):
     # first check whether the Pagat was played illegally
     if card.name == CardName.PAGAT:
-      nameList,suitList = trick.GetFlat()
+      suitList,nameList = trick.GetFlat()
       if CardName.MONDE in nameList and\
          CardName.SKIS in nameList:
         return True
