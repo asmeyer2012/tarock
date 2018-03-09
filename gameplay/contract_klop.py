@@ -79,10 +79,9 @@ class klop:
       suitList,nameList = trick.GetFlat()
       if CardName.MONDE in nameList and\
          CardName.SKIS in nameList:
-        return True
-      else:
-        if sum(c.suit == CardSuit.TRUMP for c in hand) > 1:
-           return False
+        pass
+      elif sum(c.suit == CardSuit.TRUMP for c in hand) > 1:
+        return False
 
     # FOLLOWED SUIT
     if card.suit == trick[0].suit: #followed suit
