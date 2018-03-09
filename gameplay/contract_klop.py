@@ -58,7 +58,7 @@ class klop:
 
   ## determine whether card would be the highest-ranking card if it is played to pile
   def beatTrick(self,pile,card):
-    trick = pile.CopyPile()
+    trick = pile.copyPile()
     trick.addCard(card)
     topidx = trick.rankPile()
     if topidx == len(pile):
