@@ -102,7 +102,7 @@ class klop:
               if c.suit == trick[0].suit:
                 if beatTrick(trick, c):
                   return False        # you could beat the top card
-            return False              # if you get here, you couldn't win
+            return True               # if you get here, you couldn't win
 
     # SHOULD HAVE FOLLOWED SUIT
     else:
