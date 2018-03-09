@@ -56,3 +56,20 @@ class slovenianGeneric:
         return pile.pile.index( topCard ) ## black card, already ordered
     pass
 
+  def legalLead(self, hand):
+    return True  #all cards are legal to lead under this contract
+
+  def legalFollow(self, hand, card, lead):
+    if card.suit == lead.suit: #followed suit
+      return True
+    else:
+      suitList,nameList = hand.getFlat()
+      if lead.suit in suitList: #should have followed suit
+        return False
+      elif card.suit == CardSuit.TRUMP: #trumped    
+        return True
+      elif CardSuit.TRUMP in suitList: #should have trumped
+        return False
+      else: # could not trump
+        return True
+
