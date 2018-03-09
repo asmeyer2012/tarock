@@ -56,6 +56,16 @@ class klop:
         return pile.pile.index( topCard ) ## black card, already ordered
     pass
 
+  ## determine whether card would be the highest-ranking card if it is played to pile
+  def beatTrick(self,pile,card):
+    trick = pile.CopyPile()
+    trick.addCard(card)
+    topidx = trick.rankPile()
+    if topidx == len(pile):
+      return True
+    else:
+      return False
+
   def legalLead(self, hand, card):
     # only illegal lead card is Pagat, unless it's your last card
     if (card.name.value == 0 and len(hand) > 1):
@@ -72,32 +82,25 @@ class klop:
     # FOLLOWED SUIT
     if card.suit == trick[0].suit: #followed suit
       if trick[0].suit == TRUMP:   #followed trump with trump
-        topval = trick[trick.rankPile()].name.value
-        if card.name.value > topval: #you beat the top card
+        if beatTrick(trick, card): #you beat the top card
           return True
         else:
-          topvalhand = hand[hand.rankPile()].name.value
-          if topvalhand > topval:
-            return False #you could have beaten the top card
-          else:
-            return True #you couldn't beat the top card
+          for c in hand:
+            if beatTrick(trick, c):
+              return False         #you could have beaten the top card
+            else:
+              return True          #you couldn't beat the top card
       else:                         #followed a natural suit
         suitList,nameList = trick.getFlat()
         if CardSuit.TRUMP in suitList: #trick has already been trumped
           return True
         else:                          #you need to beat if possible
-          trick2 = trick.CopyPile()
-          trick2.addCard(card)
-          topidx = rankPile(trick2)
-          if topidx == len(trick2) - 1:
+          if beatTrick(trick, card):
             return True                #you beat the top card
           else:
             for c in hand:
               if c.suit == trick[0].suit:
-                trick3 = trick.CopyPile()
-                trick3.addCard(c)
-                topidx = rankPile(trick3)
-                if topidx == len(trick3) - 1:
+                if beatTrick(trick, c):
                   return False        # you could beat the top card
             return False              # if you get here, you couldn't win
 
@@ -111,16 +114,15 @@ class klop:
       elif card.suit == CardSuit.TRUMP:
         tsuitList, tnameList = trick.getFlat()
         if CardSuit.TRUMP in tsuitList:
-          topval = trick[trick.rankPile()].name.value
-          if card.name.value > topval: #you beat the top card
+          if beatTrick(trick, card):   #you beat the top card
             return True
           else:
-            topvalhand = hand[hand.rankPile()].name.value
-            if topvalhand > topval:
+            for c in hand:
+            if beatTrick(trick, c):
               return False #you could have beaten the top card
             else:
               return True #you couldn't beat the top card
-        else:
+        else:             #yours is the first trump
           return True
 
     # SHOULD HAVE TRUMPED
