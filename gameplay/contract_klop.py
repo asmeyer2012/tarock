@@ -118,10 +118,10 @@ class klop:
             return True
           else:
             for c in hand:
-            if beatTrick(trick, c):
-              return False #you could have beaten the top card
-            else:
-              return True #you couldn't beat the top card
+              if beatTrick(trick, c):
+                return False #you could have beaten the top card
+              else:
+                return True #you couldn't beat the top card
         else:             #yours is the first trump
           return True
 
