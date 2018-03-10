@@ -1,7 +1,8 @@
-
+from cards import *
 """
 I have no idea what I am doing
 """
+@Pyro4.expose
 class Player:
   def __init__(self,name):
     self.name = name
