@@ -4,6 +4,9 @@ import os
 import signal
 import curses
 import curses.ascii
+import sys
+sys.path.insert(0, '../')
+from communication.clientskeleton import *
 
 class TimeoutError(Exception):
     pass
@@ -95,6 +98,7 @@ class CommandWindow:
     self.name = name
     self.offset = 22
     self.win = curses.newwin(1,curses.COLS,self.offset,0)
+    self.client = GameCommands()
     pass
 
   def getNextKey(self,stdscr):
@@ -109,10 +113,14 @@ class CommandWindow:
 
   ## handle idle operations, waiting for some specific command
   def idleLoop(self,stdscr): ## pass in standard cursor
+    new = True
     while True:
+      if new:
+        print "Commands:\n\r r to register \n\r l to leave \n\r d to deal \n\r s to show hand \n\r"
       self.returnCursor(stdscr)
       nextKey = self.getNextKey(stdscr)
       if   nextKey is None:
+        new = False
         continue
       elif nextKey == 'KEY_UP': ## move messages up to display later messages
         self.msgWin.incrementDisplay()
@@ -124,6 +132,18 @@ class CommandWindow:
         if self.msgWin is None:
           raise ValueError("message window not set!")
         self.messageLoop(stdscr)
+      elif nextKey == 'r': ## register command
+        self.client.register(self.name)
+        new = True
+      elif nextKey == 'l': ## leave command
+        self.client.leave()
+        break
+      elif nextKey == 'd': ## deal
+        self.client.deal()
+        new = True
+      elif nextKey == 's': ## show hand
+        self.client.showhand()
+        new = True
       ## how do I escape?
 
   ## in message mode, get a message

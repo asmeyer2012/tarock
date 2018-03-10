@@ -162,7 +162,7 @@ class Pile:
     string = ''
     for card in self.pile:
       string += card.printCard()
-      string += '\n'
+      string += '\n\r'
     return string
 
   def printCard(self,i):

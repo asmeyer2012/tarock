@@ -3,7 +3,7 @@ import os
 import sys
 
 from interface.interface import *
-#from communication.xxx import *
+from communication.clientskeleton import *
 
 playerName = 'aaron'
 if len(sys.argv) > 1:

@@ -1,5 +1,7 @@
 # KLabe attempt at a Python class for tracking the game
 import Pyro4
+import sys
+sys.path.insert(0, '../')
 from gameplay.deck_slovenian import *
 from gameplay.cards import *
 from gameplay.player import *
@@ -23,6 +25,9 @@ class TarockGame:
   def __init__(self):
     self.players = list()
     self.dealer = 0
+
+  def getplayers(self):
+    return len(self.players)
 
   def newplayer(self, name):
     player = Player(name)
