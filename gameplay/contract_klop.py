@@ -1,9 +1,9 @@
 from cards import *
 
 """
-For the basic type of bet: 3,2,1, etc.
+Rules for the klop contract
 """
-class slovenianGeneric:
+class klop:
   def __init__(self):
     self.talon = Pile()
     pass
@@ -56,20 +56,45 @@ class slovenianGeneric:
         return pile.pile.index( topCard ) ## black card, already ordered
     pass
 
-  def legalLead(self, hand, card):
-    return True  #all cards are legal to lead under this contract
-
-  def legalFollow(self, hand, card, trick):
-    if card.suit == trick[0].suit: #followed suit
+  ## determine whether card would be the highest-ranking card if it is played to pile
+  def beatTrick(self,pile,card):
+    trick = pile.copyPile()
+    trick.addCard(card)
+    topidx = trick.rankPile()
+    if topidx == len(pile):
       return True
     else:
-      suitList,nameList = hand.getFlat()
-      if trick[0].suit in suitList: #should have followed suit
-        return False
-      elif card.suit == CardSuit.TRUMP: #trumped    
-        return True
-      elif CardSuit.TRUMP in suitList: #should have trumped
-        return False
-      else: # could not trump
-        return True
+      return False
 
+  def legalLead(self, hand, card):
+    # only illegal lead card is Pagat, unless it's your last card
+    if (card.name.value == 0 and len(hand) > 1):
+      return False
+    else:
+      return True
+
+  def legalFollow(self, hand, card, trick):
+    # is it the wrong suit?
+    if card.suit != trick[0].suit:
+      if sum(c.suit == trick[0].suit for c in hand) > 0:
+        return False
+      elif card.suit != CardSuit.TRUMP:
+        if sum(c.suit == CardSuit.TRUMP for c in hand) > 0:
+          return False
+
+    # The suit is right, now check that the card wins if possible
+    if beatTrick(trick, card):
+      return True
+    else:
+      for c in hand:
+        if c.suit == card.suit:
+          if beatTrick(trick, c):
+            return False
+
+    # finally, a special case for the Pagat:
+    if card.name == CardName.PAGAT:
+      if sum(c.suit == CardSuit.TRUMP for c in hand) > 1:
+        return False
+
+    # if we get here, the card is ok
+    return True
