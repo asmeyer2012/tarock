@@ -93,11 +93,7 @@ class klop:
 
     # finally, a special case for the Pagat:
     if card.name == CardName.PAGAT:
-      suitList,nameList = trick.GetFlat()
-      if CardName.MONDE in nameList and\
-         CardName.SKIS in nameList:
-        return True
-      elif sum(c.suit == CardSuit.TRUMP for c in hand) > 1:
+      if sum(c.suit == CardSuit.TRUMP for c in hand) > 1:
         return False
 
     # if we get here, the card is ok
