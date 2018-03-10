@@ -3,6 +3,7 @@ import Pyro4
 from gameplay.deck_slovenian import *
 from gameplay.cards import *
 from gameplay.player import *
+import time
 
 """
 !! start the naming server first with:
@@ -28,13 +29,21 @@ class TarockGame:
     self.players.append(player)
     return len(self.players) - 1
 
+  def leavetable(self, idx):
+    del self.players[idx]
+
+  def ready(self):
+    while len(self.players) < 4:
+      time.sleep(1)
+
   def deal(self):
     deck = slovenianDeck()
     pile = Pile()
     pile.addCards( deck.getShuffled() )
-    for x in range(1,13):
-      c1 = pile.takeCard()
-      tarock.players[0].hand.putCard(c1)
+    for x in range(12):
+      for p in range(4):
+        c1 = pile.takeCard()
+        tarock.players[p].hand.putCard(c1)
 
   def printplayer(self, idx):
     return "player {0}\n".format(self.players[idx].name)
