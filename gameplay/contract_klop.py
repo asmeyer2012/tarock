@@ -74,7 +74,20 @@ class klop:
       return True
 
   def legalFollow(self, hand, card, trick):
-    # first check whether the Pagat was played illegally
+    # is it the wrong suit?
+    if card.suit != trick[0].suit:
+      if card.suit != CardSuit.TRUMP:
+        if sum(c.suit == CardSuit.TRUMP for c in hand) > 0:
+          return False
+    # The suit is right, now check that the card wins if possible
+    if beatTrick(trick, card):
+      return True
+    else:
+      for c in hand:
+        if c.suit == card.suit:
+          if beatTrick(trick, c):
+            return False
+    # finally, a special case for the Pagat:
     if card.name == CardName.PAGAT:
       suitList,nameList = trick.GetFlat()
       if CardName.MONDE in nameList and\
@@ -82,57 +95,5 @@ class klop:
         pass
       elif sum(c.suit == CardSuit.TRUMP for c in hand) > 1:
         return False
-
-    # FOLLOWED SUIT
-    if card.suit == trick[0].suit: #followed suit
-      if trick[0].suit == TRUMP:   #followed trump with trump
-        if beatTrick(trick, card): #you beat the top card
-          return True
-        else:
-          for c in hand:
-            if beatTrick(trick, c):
-              return False         #you could have beaten the top card
-            else:
-              return True          #you couldn't beat the top card
-      else:                         #followed a natural suit
-        suitList,nameList = trick.getFlat()
-        if CardSuit.TRUMP in suitList: #trick has already been trumped
-          return True
-        else:                          #you need to beat if possible
-          if beatTrick(trick, card):
-            return True                #you beat the top card
-          else:
-            for c in hand:
-              if c.suit == trick[0].suit:
-                if beatTrick(trick, c):
-                  return False        # you could beat the top card
-            return True               # if you get here, you couldn't win
-
-    # SHOULD HAVE FOLLOWED SUIT
-    else:
-      suitList,nameList = hand.getFlat()
-      if trick[0].suit in suitList:
-        return False
-
-    # TRUMPED
-      elif card.suit == CardSuit.TRUMP:
-        tsuitList, tnameList = trick.getFlat()
-        if CardSuit.TRUMP in tsuitList:
-          if beatTrick(trick, card):   #you beat the top card
-            return True
-          else:
-            for c in hand:
-              if beatTrick(trick, c):
-                return False #you could have beaten the top card
-            return True #you couldn't beat the top card
-        else:             #yours is the first trump
-          return True
-
-    # SHOULD HAVE TRUMPED
-      elif CardSuit.TRUMP in suitList:
-        return False
-
-    # COULD NOT TRUMP
-      else:
-        return True
-
+    # if we get here, the card is ok
+    return True
