@@ -7,23 +7,6 @@ class klop:
   def __init__(self):
     self.talon = Pile()
     pass
-  ## 
-  def getCardValue(self,card):
-    if   card.name == CardName.UNDEFINED:
-      raise ValueError("Undefined card passed to getCardValue!")
-    elif card.name == CardName.JACK:
-      return 2.-2./3.
-    elif card.name == CardName.CAVALIER:
-      return 3.-2./3.
-    elif card.name == CardName.QUEEN:
-      return 4.-2./3.
-    elif card.name == CardName.KING  or\
-         card.name == CardName.PAGAT or\
-         card.name == CardName.MONDE or\
-         card.name == CardName.SKIS:
-      return 5.-2./3.
-    else:
-      return 1./3.
   ## find top card in pile, return its index from original pile
   ## pretty inefficient, but probably okay
   def rankPile(self,pile):
@@ -45,7 +28,7 @@ class klop:
          leadSuit.name == CardSuit.DIAMOND:
         ## check for reverse ordering of red suits
         topCard = newPile.pile[ suitList.index(leadSuit) ]
-        if topCard.name.value > 22: ## face card, already ordered
+        if topCard.isFaceCard(): ## face card, already ordered
           return pile.pile.index( topCard )
         else: ## find the cards of leading suit and return the last
           suitList.reverse()
@@ -68,7 +51,7 @@ class klop:
 
   def legalLead(self, hand, card):
     # only illegal lead card is Pagat, unless it's your last card
-    if (card.name.value == 0 and len(hand) > 1):
+    if (card.name == CardName.PAGAT and len(hand) > 1):
       return False
     else:
       return True

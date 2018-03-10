@@ -182,7 +182,3 @@ class CommandWindow:
         stdscr.move(y,x)
     curses.noecho()
 
-#stdscr = curses.initscr()
-#cmdWin = CommandWindow('aaron')
-#curses.wrapper(cmdWin.idleLoop)
-

@@ -61,6 +61,26 @@ class Card:
   ## clean printing
   def printCard(self):
     return ( '%8s %10s' % (self.suit.name, self.name.name) )
+  ## is face card, useful when checking order
+  def isFaceCard(self):
+    return (self.name.value > 22)
+  ## card value for counting
+  def getValue(self):
+    if   self.name == CardName.UNDEFINED:
+      raise ValueError("Undefined card passed to getCardValue!")
+    elif self.name == CardName.JACK:
+      return 2.-2./3.
+    elif self.name == CardName.CAVALIER:
+      return 3.-2./3.
+    elif self.name == CardName.QUEEN:
+      return 4.-2./3.
+    elif self.name == CardName.KING  or\
+         self.name == CardName.PAGAT or\
+         self.name == CardName.MONDE or\
+         self.name == CardName.SKIS:
+      return 5.-2./3.
+    else:
+      return 1./3.
 
 """
 Pile is a group of more than one cards
@@ -141,11 +161,10 @@ class Pile:
     print self.pile[i].printCard()
     pass
 
-  ### do this from contract, not from pile!
-  #def countValue(self,contract): ## value depends on contract!
-  #  value = 0.
-  #  for card in self.pile:
-  #    value += contract.getCardValue(card)
-  #  return value
-
+  ## get value of all cards in pile
+  def getValue(self):
+    value = 0.
+    for card in self.pile:
+      value += card.getValue()
+    return value
 
