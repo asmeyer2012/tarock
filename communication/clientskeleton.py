@@ -6,8 +6,14 @@ class GameCommands:
     self.idx = -1
 
   def register(self, name):
-    self.idx = tarock.newplayer(name)
-    mess = "You have been registered as " + tarock.printplayer(self.idx)
+    if self.idx != -1:
+      mess = "You are already registered!"
+    else:
+      self.idx = tarock.newplayer(name)
+      if self.idx >= 0:
+        mess = "You have been registered as " + tarock.printplayer(self.idx)
+      else:
+        mess = "You cannot register at this time"
     return mess
 
   def printPlayers(self):
@@ -23,13 +29,9 @@ class GameCommands:
       mess = "No players\n\r"
       return mess
 
-#TODO: Let everyone know when someone deals
   def deal(self):
-    if tarock.getplayers() > 3:
-      tarock.deal()
-      return "Hand dealt\n\r"
-    else:
-      return "Not enough players to deal yet\n\r"
+    mess = tarock.deal()
+    return mess
 
   def handlen(self):
     return tarock.handlen(self.idx)

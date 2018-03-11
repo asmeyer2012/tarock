@@ -5,6 +5,7 @@ sys.path.insert(0, '../')
 from gameplay.deck_slovenian import *
 from gameplay.cards import *
 from gameplay.player import *
+from gameplay.orderofplay import *
 import time
 
 """
@@ -23,6 +24,7 @@ $ python serverskeleton.py
 @Pyro4.expose
 class TarockGame:
   def __init__(self):
+    self.stage = Stage.INITIATE
     self.players = list()
     self.dealer = 0
 
@@ -30,9 +32,14 @@ class TarockGame:
     return len(self.players)
 
   def newplayer(self, name):
-    player = Player(name)
-    self.players.append(player)
-    return len(self.players) - 1
+    if len(self.players) <= 3:
+      player = Player(name)
+      self.players.append(player)
+      if len(self.players) == 4 and self.stage == Stage.INITIATE:
+        self.stage = Stage.DEAL
+      return len(self.players) - 1
+    else:
+      return -1
 
   def leavetable(self, idx):
     del self.players[idx]
@@ -41,14 +48,21 @@ class TarockGame:
     while len(self.players) < 4:
       time.sleep(1)
 
+#TODO: Let everyone know when someone deals
+#TODO: Enforce the correct dealer?
   def deal(self):
-    deck = slovenianDeck()
-    pile = Pile()
-    pile.addCards( deck.getShuffled() )
-    for x in range(12):
-      for p in range(4):
-        c1 = pile.takeCard()
-        self.players[p].hand.putCard(c1)
+    if self.stage == Stage.DEAL:
+      deck = slovenianDeck()
+      pile = Pile()
+      pile.addCards( deck.getShuffled() )
+      for x in range(12):
+        for p in range(4):
+          c1 = pile.takeCard()
+          self.players[p].hand.putCard(c1)
+      self.stage = Stage.BID
+      return "Hand dealt"
+    else:
+      return "Cannot deal from this state"
 
   def printplayer(self, idx):
     return self.players[idx].name
