@@ -104,6 +104,9 @@ class Pile:
       self.addCard(card)
     pass
 
+  def pilelen(self):
+    return len(self.pile)
+
   ## assign player to all cards in pile
   def assignPlayer(self,player):
     for card in self.pile:
@@ -166,7 +169,7 @@ class Pile:
     return string
 
   def printCard(self,i):
-    print self.pile[i].printCard()
+    return self.pile[i].printCard()
     pass
 
   ## get value of all cards in pile

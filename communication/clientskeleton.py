@@ -7,30 +7,38 @@ class GameCommands:
 
   def register(self, name):
     self.idx = tarock.newplayer(name)
-    print "You have been registered as " + tarock.printplayer(self.idx) + '\r'
-    if self.idx > 0:
-      mess = "Other players are:\n\r"
-      for p in range (self.idx):
+    mess = "You have been registered as " + tarock.printplayer(self.idx)
+    return mess
+
+  def printPlayers(self):
+    if self.idx > -1:
+      mess = "Players are: "
+      for p in range (self.idx+1):
+        if p != 0:
+          mess += ', '
         mess += tarock.printplayer(p)
-        mess += '\r'
-      print mess
+      mess += '.'
+      return mess
     else:
-      print "No other players\n\r"
+      mess = "No players\n\r"
+      return mess
 
 #TODO: Let everyone know when someone deals
   def deal(self):
     if tarock.getplayers() > 3:
       tarock.deal()
-      print "Hand dealt\n\r"
+      return "Hand dealt\n\r"
     else:
-      print "Not enough players to deal yet\n\r"
+      return "Not enough players to deal yet\n\r"
 
-  def showhand(self):
+  def handlen(self):
+    return tarock.handlen(self.idx)
+
+  def printCard(self, i):
     if self.idx >= 0:
-      print "Here is your hand:\n\r"
-      print(tarock.printHand(self.idx))
+      return tarock.printCard(self.idx, i)
     else:
-      print "You must register first\n\r"
+      return "You must register first"
 
 #TODO: When someone leaves, let everyone know, and update idx's
   def leave(self):

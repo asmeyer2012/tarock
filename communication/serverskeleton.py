@@ -48,15 +48,18 @@ class TarockGame:
     for x in range(12):
       for p in range(4):
         c1 = pile.takeCard()
-        tarock.players[p].hand.putCard(c1)
+        self.players[p].hand.putCard(c1)
 
   def printplayer(self, idx):
-    return "player {0}\n".format(self.players[idx].name)
+    return self.players[idx].name
 
-  def printHand(self, idx):
+  def handlen(self, idx):
+    return self.players[idx].hand.pilelen()
+
+  def printCard(self, idx, i):
     pile = self.players[idx].hand
     pile.orderPile()
-    return pile.printPile()
+    return pile.printCard(i)
 
 daemon = Pyro4.Daemon()
 ns = Pyro4.locateNS()
