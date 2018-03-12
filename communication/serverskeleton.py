@@ -50,7 +50,6 @@ class TarockGame:
     while len(self.players) < 4:
       time.sleep(1)
 
-#TODO: Let everyone know when someone deals
 #TODO: Enforce the correct dealer?
   def deal(self):
     if self.stage == Stage.DEAL:
@@ -62,7 +61,9 @@ class TarockGame:
           c1 = pile.takeCard()
           self.players[p].hand.putCard(c1)
       self.stage = Stage.BID
-      return "Hand dealt"
+      for p in self.players:
+        p.cmdwin.writegame("Hand dealt!")
+      return "(Success)"
     else:
       return "Cannot deal from this state"
 
@@ -79,7 +80,7 @@ class TarockGame:
 
   def broadcast(self, name, mess):
     for p in self.players:
-      p.cmdwin.write(name,mess)
+      p.cmdwin.writemsg(name,mess)
 
 daemon = Pyro4.Daemon()
 ns = Pyro4.locateNS()

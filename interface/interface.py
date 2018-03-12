@@ -252,11 +252,14 @@ class CommandWindow:
           self.gmWin.addLine(self.client.printCard(i))
       ## how do I escape?
 
-  def write(self,name,mess):
+  def writemsg(self,name,mess):
     self.msgWin.addLine(name,mess)
     for i in range(curses.LINES-1,self.offset-1,-1):
       self.stdscr.move(i,0)
       self.stdscr.deleteln()
+
+  def writegame(self,mess):
+    self.gmWin.addLine(mess)
 
   ## in message mode, get a message
   def messageLoop(self,stdscr):
