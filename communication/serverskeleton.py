@@ -34,6 +34,8 @@ class TarockGame:
   def newplayer(self, name):
     if len(self.players) <= 3:
       player = Player(name)
+      muri = ns.lookup("example.cmdwin.{0}".format(name))
+      player.cmdwin = Pyro4.Proxy(muri)
       self.players.append(player)
       if len(self.players) == 4 and self.stage == Stage.INITIATE:
         self.stage = Stage.DEAL
@@ -74,6 +76,10 @@ class TarockGame:
     pile = self.players[idx].hand
     pile.orderPile()
     return pile.printCard(i)
+
+  def broadcast(self, name, mess):
+    for p in self.players:
+      p.cmdwin.write(name,mess)
 
 daemon = Pyro4.Daemon()
 ns = Pyro4.locateNS()

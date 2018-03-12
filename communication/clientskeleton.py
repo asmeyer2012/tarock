@@ -49,6 +49,9 @@ class GameCommands:
     else:
       print "You cannot leave before you arrive!\n\r"
 
+  def broadcast(self, name, mess):
+    tarock.broadcast(name, mess)
+
 nameserver = Pyro4.locateNS()
 tarockuri = nameserver.lookup("example.tarock")
 tarock = Pyro4.Proxy(tarockuri)

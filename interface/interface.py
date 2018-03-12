@@ -7,6 +7,8 @@ import curses.ascii
 import sys
 sys.path.insert(0, '../')
 from communication.clientskeleton import *
+import threading
+import time
 
 class TimeoutError(Exception):
     pass
@@ -123,6 +125,7 @@ class HelpWindow:
     self.win.refresh()
 
 ## handle passing messages between people
+@Pyro4.expose
 class MessageWindow:
   def __init__(self):
     self.ndisp = 0 ## count backward from end of message stream
@@ -182,6 +185,7 @@ def timeoutGetKey(stdscr):
   return stdscr.getkey()
 
 ## control all the other windows and handle input
+@Pyro4.expose
 class CommandWindow:
   def __init__(self,name):
     #self.msgWin = None
@@ -192,12 +196,15 @@ class CommandWindow:
     self.offset = 22
     self.win = curses.newwin(1,curses.COLS,self.offset,0)
     self.client = GameCommands()
+    self.daemon = Pyro4.Daemon()
+    self.stdscr = None
     pass
 
   def getNextKey(self,stdscr):
     try:
       return timeoutGetKey(stdscr)
     except KeyboardInterrupt:
+      self.daemon.shutdown()
       raise ## fast quit with ctrl-C
     except:
       return ## catch timeout
@@ -206,7 +213,13 @@ class CommandWindow:
 
   ## handle idle operations, waiting for some specific command
   def idleLoop(self,stdscr): ## pass in standard cursor
+    self.stdscr = stdscr
     self.helpWin.addLine("Commands:      r - register   l - leave   d - deal   s - show hand")
+    ns = Pyro4.locateNS()
+    uri = self.daemon.register(self)
+    ns.register("example.cmdwin.{0}".format(self.name), uri)
+    t = threading.Thread(target = self.listen)
+    t.start()
     while True:
       self.returnCursor(stdscr)
       nextKey = self.getNextKey(stdscr)
@@ -226,8 +239,10 @@ class CommandWindow:
         self.gmWin.addLine(self.client.register(self.name))
         self.gmWin.addLine(self.client.printPlayers())
       elif nextKey == 'l': ## leave command
-        self.client.leave()
         print "Goodbye"
+        time.sleep(1)
+        self.client.leave()
+        self.daemon.shutdown()
         break
       elif nextKey == 'd': ## deal
         self.gmWin.addLine(self.client.deal())
@@ -236,6 +251,12 @@ class CommandWindow:
         for i in range(cards):
           self.gmWin.addLine(self.client.printCard(i))
       ## how do I escape?
+
+  def write(self,name,mess):
+    self.msgWin.addLine(name,mess)
+    for i in range(curses.LINES-1,self.offset-1,-1):
+      self.stdscr.move(i,0)
+      self.stdscr.deleteln()
 
   ## in message mode, get a message
   def messageLoop(self,stdscr):
@@ -248,10 +269,8 @@ class CommandWindow:
       if   nextKey is None:
         continue
       elif nextKey == '\n': ## display current text in message window and exit message mode
-        self.msgWin.addLine(self.name,line+lineend)
-        for i in range(curses.LINES-1,self.offset-1,-1):
-          stdscr.move(i,0)
-          stdscr.deleteln()
+        mess = line+lineend
+        self.client.broadcast(self.name, mess)
         break
       elif nextKey == 'KEY_BACKSPACE': ## delete previous character
         ## because of echo, backspace also moves cursor
@@ -293,3 +312,5 @@ class CommandWindow:
         stdscr.move(y,x)
     curses.noecho()
 
+  def listen(self):
+    self.daemon.requestLoop()
