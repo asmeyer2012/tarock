@@ -25,6 +25,11 @@ class GameCommands:
         mess = "You cannot register at this time"
     return mess
 
+  # This function is called by the server when someone leaves
+  def updateidx(self, idx):
+    if self.idx > idx:
+      self.idx -= 1
+
   def printPlayers(self):
     if self.idx > -1:
       mess = "Players are: "
@@ -51,7 +56,6 @@ class GameCommands:
     else:
       return "You must register first"
 
-#TODO: When someone leaves, let everyone know, and update idx's
   def leave(self):
     if self.idx >=0:
       tarock.leavetable(self.idx)
@@ -64,6 +68,12 @@ class GameCommands:
 
   def broadcast(self, name, mess):
     tarock.broadcast(name, mess)
+
+  def writemsg(self, name, mess):
+    self.interface.writemsg(name, mess)
+
+  def writegame(self, mess):
+    self.interface.gmWin.addLine(mess)
 
 def listen():
   daemon.requestLoop()

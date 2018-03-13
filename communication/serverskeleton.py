@@ -44,7 +44,11 @@ class TarockGame:
       return -1
 
   def leavetable(self, idx):
+    for p in self.players:
+      p.client.writegame("{0} is leaving.".format(self.players[idx].name))
     del self.players[idx]
+    for p in self.players:
+      p.client.updateidx(idx)
 
   def ready(self):
     while len(self.players) < 4:

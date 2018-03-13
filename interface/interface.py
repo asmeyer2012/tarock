@@ -250,9 +250,6 @@ class CommandWindow:
       self.stdscr.move(i,0)
       self.stdscr.deleteln()
 
-  def writegame(self,mess):
-    self.gmWin.addLine(mess)
-
   ## in message mode, get a message
   def messageLoop(self,stdscr):
     line = ''
