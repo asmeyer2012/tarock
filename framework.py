@@ -14,6 +14,6 @@ pass
 
 ## initialize curses for interface
 stdscr = curses.initscr()
-cmdWin = CommandWindow(playerName)
-curses.wrapper(cmdWin.idleLoop)
+gc = GameCommands(playerName)
+curses.wrapper(gc.interface.idleLoop)
 

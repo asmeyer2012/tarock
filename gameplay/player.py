@@ -10,7 +10,7 @@ class Player:
     self.winnings = Pile()
     self.points = 0
     self.radli = 0
-    self.cmdwin = None
+    self.client = None
     pass
   def takeTrick(self,trick):
     for i in range(len(trick)):

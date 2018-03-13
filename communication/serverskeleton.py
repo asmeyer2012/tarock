@@ -34,8 +34,8 @@ class TarockGame:
   def newplayer(self, name):
     if len(self.players) <= 3:
       player = Player(name)
-      muri = ns.lookup("example.cmdwin.{0}".format(name))
-      player.cmdwin = Pyro4.Proxy(muri)
+      curi = ns.lookup("example.client.{0}".format(name))
+      player.client = Pyro4.Proxy(curi)
       self.players.append(player)
       if len(self.players) == 4 and self.stage == Stage.INITIATE:
         self.stage = Stage.DEAL
@@ -62,7 +62,7 @@ class TarockGame:
           self.players[p].hand.putCard(c1)
       self.stage = Stage.BID
       for p in self.players:
-        p.cmdwin.writegame("Hand dealt!")
+        p.client.writegame("Hand dealt!")
       return "(Success)"
     else:
       return "Cannot deal from this state"
@@ -80,7 +80,7 @@ class TarockGame:
 
   def broadcast(self, name, mess):
     for p in self.players:
-      p.cmdwin.writemsg(name,mess)
+      p.client.writemsg(name,mess)
 
 daemon = Pyro4.Daemon()
 ns = Pyro4.locateNS()

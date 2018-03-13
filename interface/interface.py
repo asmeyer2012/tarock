@@ -5,10 +5,8 @@ import signal
 import curses
 import curses.ascii
 import sys
-sys.path.insert(0, '../')
-from communication.clientskeleton import *
-import threading
 import time
+import Pyro4
 
 class TimeoutError(Exception):
     pass
@@ -188,15 +186,15 @@ def timeoutGetKey(stdscr):
 @Pyro4.expose
 class CommandWindow:
   def __init__(self,name):
-    #self.msgWin = None
     self.gmWin  = GameWindow()
     self.msgWin = MessageWindow()
     self.helpWin = HelpWindow()
     self.name = name
     self.offset = 22
     self.win = curses.newwin(1,curses.COLS,self.offset,0)
-    self.client = GameCommands()
-    self.daemon = Pyro4.Daemon()
+    ns = Pyro4.locateNS()
+    uri = ns.lookup("example.client.{0}".format(name))
+    self.client = Pyro4.Proxy(uri)
     self.stdscr = None
     pass
 
@@ -204,7 +202,7 @@ class CommandWindow:
     try:
       return timeoutGetKey(stdscr)
     except KeyboardInterrupt:
-      self.daemon.shutdown()
+      self.client.daemon.shutdown()
       raise ## fast quit with ctrl-C
     except:
       return ## catch timeout
@@ -215,11 +213,6 @@ class CommandWindow:
   def idleLoop(self,stdscr): ## pass in standard cursor
     self.stdscr = stdscr
     self.helpWin.addLine("Commands:      r - register   l - leave   d - deal   s - show hand")
-    ns = Pyro4.locateNS()
-    uri = self.daemon.register(self)
-    ns.register("example.cmdwin.{0}".format(self.name), uri)
-    t = threading.Thread(target = self.listen)
-    t.start()
     while True:
       self.returnCursor(stdscr)
       nextKey = self.getNextKey(stdscr)
@@ -242,7 +235,6 @@ class CommandWindow:
         print "Goodbye"
         time.sleep(1)
         self.client.leave()
-        self.daemon.shutdown()
         break
       elif nextKey == 'd': ## deal
         self.gmWin.addLine(self.client.deal())
@@ -314,6 +306,3 @@ class CommandWindow:
         stdscr.addstr(y,x,lineend)
         stdscr.move(y,x)
     curses.noecho()
-
-  def listen(self):
-    self.daemon.requestLoop()

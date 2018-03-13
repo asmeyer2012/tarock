@@ -1,9 +1,18 @@
 import Pyro4
-import time
+import sys
+sys.path.insert(0,'../')
+from interface.interface import *
+import threading
+import curses
+import os
+import sys
 
+@Pyro4.expose
 class GameCommands:
-  def __init__(self):
+  def __init__(self,name):
     self.idx = -1
+    self.name = name
+    self.interface = None
 
   def register(self, name):
     if self.idx != -1:
@@ -48,10 +57,39 @@ class GameCommands:
       tarock.leavetable(self.idx)
     else:
       print "You cannot leave before you arrive!\n\r"
+    daemon.shutdown()
+
+  def test(self):
+    return "test"
 
   def broadcast(self, name, mess):
     tarock.broadcast(name, mess)
 
-nameserver = Pyro4.locateNS()
-tarockuri = nameserver.lookup("example.tarock")
+def listen():
+  daemon.requestLoop()
+
+
+## MAIN
+playerName = sys.argv[1]
+stdscr = curses.initscr()
+
+## Create a client object and register it
+gc = GameCommands(playerName)
+daemon = Pyro4.Daemon()
+ns = Pyro4.locateNS()
+uri = daemon.register(gc)
+ns.register("example.client.{0}".format(playerName), uri)
+
+## Now that we're registered, create a command window to use
+gc.interface = CommandWindow(playerName)
+
+## Connect to the remote Tarock Server
+tarockuri = ns.lookup("example.tarock")
 tarock = Pyro4.Proxy(tarockuri)
+
+## Launch a new thread to listen to the interface
+t = threading.Thread(target = listen)
+t.start()
+
+## Start running the interface
+curses.wrapper(gc.interface.idleLoop)
