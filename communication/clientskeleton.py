@@ -44,8 +44,7 @@ class GameCommands:
       return mess
 
   def deal(self):
-    mess = tarock.deal()
-    return mess
+    tarock.deal(self.idx)
 
   def handlen(self):
     return tarock.handlen(self.idx)
@@ -67,7 +66,7 @@ class GameCommands:
     return "test"
 
   def broadcast(self, name, mess):
-    tarock.broadcast(name, mess)
+    tarock.broadcastmsg(name, mess)
 
   def writemsg(self, name, mess):
     self.interface.writemsg(name, mess)

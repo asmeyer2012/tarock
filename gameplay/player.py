@@ -11,7 +11,9 @@ class Player:
     self.points = 0
     self.radli = 0
     self.client = None
+    self.passed = False
     pass
+
   def takeTrick(self,trick):
     for i in range(len(trick)):
       self.winnings.addCard(trick.removeCard())

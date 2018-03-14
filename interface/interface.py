@@ -237,7 +237,7 @@ class CommandWindow:
         self.client.leave()
         break
       elif nextKey == 'd': ## deal
-        self.gmWin.addLine(self.client.deal())
+        self.client.deal()
       elif nextKey == 's': ## show hand
         cards = self.client.handlen()
         for i in range(cards):

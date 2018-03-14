@@ -6,6 +6,8 @@ from gameplay.deck_slovenian import *
 from gameplay.cards import *
 from gameplay.player import *
 from gameplay.orderofplay import *
+from gameplay.auction import *
+from intertools import cycle
 import time
 
 """
@@ -26,50 +28,30 @@ class TarockGame:
   def __init__(self):
     self.stage = Stage.INITIATE
     self.players = list()
-    self.dealer = 0
-
-  def getplayers(self):
-    return len(self.players)
+    self.dealeridx = 0
+    self.table = list()
+    self.tablec = None
+    self.auction = None
+    self.compulsoryklop = False
 
   def newplayer(self, name):
-    if len(self.players) <= 3:
-      player = Player(name)
-      curi = ns.lookup("example.client.{0}".format(name))
-      player.client = Pyro4.Proxy(curi)
-      self.players.append(player)
-      if len(self.players) == 4 and self.stage == Stage.INITIATE:
-        self.stage = Stage.DEAL
-      return len(self.players) - 1
-    else:
-      return -1
+    player = Player(name)
+    curi = ns.lookup("example.client.{0}".format(name))
+    player.client = Pyro4.Proxy(curi)
+    self.players.append(player)
+    if len(self.players) <= 4:
+      self.table.append(player)
+    if len(self.players) == 4 and self.stage == Stage.INITIATE:
+      self.tablec = cycle(table)
+      self.stage = Stage.DEAL
+      broadcast("Ready for {0} to deal".format(self.players[self.dealer].name))
+    return len(self.players) - 1
 
   def leavetable(self, idx):
-    for p in self.players:
-      p.client.writegame("{0} is leaving.".format(self.players[idx].name))
+    broadcast("{0} is leaveing.".format(self.players[idx].name))
     del self.players[idx]
     for p in self.players:
       p.client.updateidx(idx)
-
-  def ready(self):
-    while len(self.players) < 4:
-      time.sleep(1)
-
-#TODO: Enforce the correct dealer?
-  def deal(self):
-    if self.stage == Stage.DEAL:
-      deck = slovenianDeck()
-      pile = Pile()
-      pile.addCards( deck.getShuffled() )
-      for x in range(12):
-        for p in range(4):
-          c1 = pile.takeCard()
-          self.players[p].hand.putCard(c1)
-      self.stage = Stage.BID
-      for p in self.players:
-        p.client.writegame("Hand dealt!")
-      return "(Success)"
-    else:
-      return "Cannot deal from this state"
 
   def printplayer(self, idx):
     return self.players[idx].name
@@ -82,9 +64,30 @@ class TarockGame:
     pile.orderPile()
     return pile.printCard(i)
 
-  def broadcast(self, name, mess):
+  def broadcast(self, mess):
+    for p in self.players:
+      p.client.writegame(mess)
+
+  def broadcastmsg(self, name, mess):
     for p in self.players:
       p.client.writemsg(name,mess)
+
+  def deal(self, idx):
+    if self.stage == Stage.DEAL and idx == self.dealer:
+      deck = slovenianDeck()
+      pile = Pile()
+      pile.addCards( deck.getShuffled() )
+      for x in range(12):
+        for p in range(4):
+          c1 = pile.takeCard()
+          self.players[p].hand.putCard(c1)
+      self.stage = Stage.BID
+      broadcast("Hand dealt!")
+      self.auction = Auction(self.player[idx], self.tablec, self.compulsoryklop)
+      self.auction.Start(idx)
+      broadcast("{0} has the first bid at Two".format(self.players[self.auction.livebidder].name))
+    else:
+      self.player[idx].client.writegame("Cannot deal from this state")
 
 daemon = Pyro4.Daemon()
 ns = Pyro4.locateNS()
