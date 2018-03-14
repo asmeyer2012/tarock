@@ -29,10 +29,13 @@ class Announcements(Enum):
 class Auction:
   def __init__(self, dealer, tablec, klop):
     self.dealer = dealer
-    self.table = tablec
-    self.livebidder = next(next(self.tablec))
+    self.tablec = tablec
+    while self.tablec != dealer:
+      next(self.tablec)
+    next(self.tablec)
+    self.livebidder = next(self.tablec)
     self.highbidder = None
-    self.livebid = Contract.UNDEFINED
+    self.livebid = ContractName.UNDEFINED
     self.compulsoryklop = klop
     for p in tablec:
       p.passed = False
@@ -46,7 +49,7 @@ class Auction:
     elif not self.compulsoryklop:
       # TODO: How does precendence work again?
       if bid > self.livebid or (bid == self.livebid and False):
-        if bid > Contract.THREE:
+        if bid > ContractName.THREE:
           self.livebidder = next(self.tablec)
           self.highbidder = player
           self.livebid = bid
@@ -61,12 +64,12 @@ class Auction:
     else:
       #TODO: Precendence
       if bid > self.livebid or (bid == self.livebid and False):
-        if bid > Contract.BEGGAR:
+        if bid > ContractName.BEGGAR:
           self.livebidder = next(self.tablec)
           self.highbidder = player
           self.livebid = bid
           return True
-        elif self.passes == 3 and bid == Contract.KLOP:
+        elif self.passes == 3 and bid == ContractName.KLOP:
           self.done = True
           return True
         else:
@@ -83,7 +86,7 @@ class Auction:
       else:
         player.passed = True
         self.passes += 1
-        if self.passes == 3 and self.livebid != Contract.UNDEFINED
+        if self.passes == 3 and self.livebid != ContractName.UNDEFINED:
           self.done = True
         return True
     else:

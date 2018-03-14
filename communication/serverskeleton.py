@@ -7,7 +7,7 @@ from gameplay.cards import *
 from gameplay.player import *
 from gameplay.orderofplay import *
 from gameplay.auction import *
-from intertools import cycle
+from itertools import cycle
 import time
 
 """
@@ -42,13 +42,13 @@ class TarockGame:
     if len(self.players) <= 4:
       self.table.append(player)
     if len(self.players) == 4 and self.stage == Stage.INITIATE:
-      self.tablec = cycle(table)
+      self.tablec = cycle(self.table)
       self.stage = Stage.DEAL
-      broadcast("Ready for {0} to deal".format(self.players[self.dealer].name))
+      self.broadcast("Ready for {0} to deal".format(self.players[self.dealeridx].name))
     return len(self.players) - 1
 
   def leavetable(self, idx):
-    broadcast("{0} is leaveing.".format(self.players[idx].name))
+    self.broadcast("{0} is leaving.".format(self.players[idx].name))
     del self.players[idx]
     for p in self.players:
       p.client.updateidx(idx)
@@ -73,7 +73,7 @@ class TarockGame:
       p.client.writemsg(name,mess)
 
   def deal(self, idx):
-    if self.stage == Stage.DEAL and idx == self.dealer:
+    if self.stage == Stage.DEAL and idx == self.dealeridx:
       deck = slovenianDeck()
       pile = Pile()
       pile.addCards( deck.getShuffled() )
@@ -82,12 +82,11 @@ class TarockGame:
           c1 = pile.takeCard()
           self.players[p].hand.putCard(c1)
       self.stage = Stage.BID
-      broadcast("Hand dealt!")
-      self.auction = Auction(self.player[idx], self.tablec, self.compulsoryklop)
-      self.auction.Start(idx)
-      broadcast("{0} has the first bid at Two".format(self.players[self.auction.livebidder].name))
+      self.broadcast("Hand dealt!")
+      self.auction = Auction(self.players[idx], self.tablec, self.compulsoryklop)
+      self.broadcast("{0} has the first bid at Two".format(self.players[self.auction.livebidder].name))
     else:
-      self.player[idx].client.writegame("Cannot deal from this state")
+      self.players[idx].client.writegame("Cannot deal from this state")
 
 daemon = Pyro4.Daemon()
 ns = Pyro4.locateNS()
