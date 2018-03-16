@@ -27,17 +27,18 @@ class Announcements(Enum):
   VALAT = 4
 
 class Auction:
-  def __init__(self, dealer, tablec, klop):
+  def __init__(self, dealer, table, klop):
     self.dealer = dealer
-    self.tablec = tablec
-    while self.tablec != dealer:
-      next(self.tablec)
+    self.table = table
+    self.tablec = cycle(table)
+    while next(self.tablec) != dealer:
+      continue
     next(self.tablec)
     self.livebidder = next(self.tablec)
     self.highbidder = None
     self.livebid = ContractName.UNDEFINED
     self.compulsoryklop = klop
-    for p in tablec:
+    for p in table:
       p.passed = False
     self.passes = 0
     self.done = False

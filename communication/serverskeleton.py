@@ -7,7 +7,6 @@ from gameplay.cards import *
 from gameplay.player import *
 from gameplay.orderofplay import *
 from gameplay.auction import *
-from itertools import cycle
 import time
 
 """
@@ -30,7 +29,6 @@ class TarockGame:
     self.players = list()
     self.dealeridx = 0
     self.table = list()
-    self.tablec = None
     self.auction = None
     self.compulsoryklop = False
 
@@ -42,7 +40,6 @@ class TarockGame:
     if len(self.players) <= 4:
       self.table.append(player)
     if len(self.players) == 4 and self.stage == Stage.INITIATE:
-      self.tablec = cycle(self.table)
       self.stage = Stage.DEAL
       self.broadcast("Ready for {0} to deal".format(self.players[self.dealeridx].name))
     return len(self.players) - 1
@@ -83,8 +80,8 @@ class TarockGame:
           self.players[p].hand.putCard(c1)
       self.stage = Stage.BID
       self.broadcast("Hand dealt!")
-      self.auction = Auction(self.players[idx], self.tablec, self.compulsoryklop)
-      self.broadcast("{0} has the first bid at Two".format(self.players[self.auction.livebidder].name))
+      self.auction = Auction(self.players[idx], self.table, self.compulsoryklop)
+      self.broadcast("{0} has the first bid at Two".format(self.auction.livebidder.name))
     else:
       self.players[idx].client.writegame("Cannot deal from this state")
 
