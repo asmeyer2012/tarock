@@ -62,8 +62,11 @@ class GameCommands:
       print "You cannot leave before you arrive!\n\r"
     daemon.shutdown()
 
-  def test(self):
-    return "test"
+  def raisebid(self, bid):
+    tarock.raisebid(self.idx, bid)
+
+  def passbid(self):
+    tarock.passbid(self.idx)
 
   def broadcast(self, name, mess):
     tarock.broadcastmsg(name, mess)

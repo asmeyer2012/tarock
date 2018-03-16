@@ -85,6 +85,31 @@ class TarockGame:
     else:
       self.players[idx].client.writegame("Cannot deal from this state")
 
+  def raisebid(self, idx, bid):
+    if self.stage == Stage.BID and self.players[idx] == self.auction.livebidder:
+      if(self.auction.raisebid(self.players[idx], bid)):
+        continue
+      else:
+        self.players[idx].client.writegame("Not a legal bid")
+    else:
+      self.players[idx].client.writegame("Cannot bid at htis time")
+    if self.auction.done:
+      self.stage = Stage.ANNOUNCEMENTS
+      self.broadcast("Time for announcements")
+
+  def passbid(self, idx):
+    if self.stage == Stage.BID and self.players[idx] == self.auction.livebidder:
+      if(self.auction.passbid(self.players[idx]):
+        continue
+      else:
+        self.players[idx].client.writegame("You cannot pass!")
+    else:
+      self.players[idx].client.writegame("No passing at this time")
+    if self.auction.done:
+      self.stage = Stage.ANNOUNCEMENTS
+      self.broadcast("Time for announcements")
+  
+
 daemon = Pyro4.Daemon()
 ns = Pyro4.locateNS()
 
