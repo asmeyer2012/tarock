@@ -36,6 +36,7 @@ class TarockGame:
     player = Player(name)
     curi = ns.lookup("example.client.{0}".format(name))
     player.client = Pyro4.Proxy(curi)
+    self.broadcast("Player {0} arrived.".format(name))
     self.players.append(player)
     if len(self.players) <= 4:
       self.table.append(player)
@@ -86,26 +87,41 @@ class TarockGame:
       self.players[idx].client.writegame("Cannot deal from this state")
 
   def raisebid(self, idx, bid):
-    if self.stage == Stage.BID and self.players[idx] == self.auction.livebidder:
-      if not self.auction.raisebid(self.players[idx], bid):
-        self.players[idx].client.writegame("Not a legal bid")
+    if not self.players[idx] == self.auction.livebidder:
+      self.players[idx].client.writegame("You are not the current bidder")
     else:
-      self.players[idx].client.writegame("Cannot bid at htis time")
-      return
-    if self.auction.done:
-      self.stage = Stage.RAISEBID
-      self.broadcast("{0} has the bid at {1}.  Raise bid?".format(self.auction.highbidder.name, self.auction.livebid.name))
+      if self.stage == Stage.BID:
+        if not self.auction.raisebid(self.players[idx], bid):
+          self.players[idx].client.writegame("Not a legal bid")
+        if self.auction.done:
+          self.auction.livebidder = self.auction.highbidder
+          self.stage == Stage.RAISEBID
+          self.broadcast("{0} has the bid at {1}.  Raise bid?".format(self.auction.highbidder.name, self.auction.livebid.name))
+      elif self.stage == Stage.RAISEBID:
+        if not self.auction.raisebid(self.players[idx], bid):
+          self.players[idx].client.writegame("Not a legal raise bid")
+        else:
+          self.stage = Stage.ANNOUNCEMENTS
+          self.broadcast("Time for announcements")
+      else:
+        self.players[idx].client.writegame("Cannot bid at this time")
 
   def passbid(self, idx):
-    if self.stage == Stage.BID and self.players[idx] == self.auction.livebidder:
-      if not self.auction.passbid(self.players[idx]):
-        self.players[idx].client.writegame("You cannot pass!")
+    if not self.players[idx] == self.auction.livebidder:
+      self.players[idx].client.writegame("You are not the current bidder")
     else:
-      self.players[idx].client.writegame("No passing at this time")
-      return
-    if self.auction.done:
-      self.stage = Stage.RAISEBID
-      self.broadcast("{0} has the bid at {1}.  Raise bid?".format(self.auction.highbidder.name, self.auction.livebid.name))
+      if self.stage == Stage.BID:
+        if not self.auction.passbid(self.players[idx]):
+          self.players[idx].client.writegame("You cannot pass!")
+        if self.auction.done:
+          self.auction.livebidder = self.auction.highbidder
+          self.stage = Stage.RAISEBID
+          self.broadcast("{0} has the bid at {1}.  Raise bid?".format(self.auction.highbidder.name, self.auction.livebid.name))
+      elif self.stage == Stage.RAISEBID:
+        self.stage == Stage.ANNOUNCEMENTS
+        self.broadcast("Time for announcements")
+      else:
+        self.players[idx].client.writegame("No passing at this time")
   
 
 daemon = Pyro4.Daemon()
