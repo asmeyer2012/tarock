@@ -86,6 +86,15 @@ class TarockGame:
     else:
       self.players[idx].client.writegame("Cannot deal from this state")
 
+  #Internal function
+  def king(self):
+    if self.auction.king:
+      self.stage = Stage.KING
+      self.broadcast("Call a king")
+    else:
+      self.stage = Stage.ANNOUNCEMENTS
+      self.broadcast("Time for announcements")
+
   def raisebid(self, idx, bid):
     if not self.players[idx] == self.auction.livebidder:
       self.players[idx].client.writegame("You are not the current bidder")
@@ -101,8 +110,7 @@ class TarockGame:
         if not self.auction.raisebid(self.players[idx], bid):
           self.players[idx].client.writegame("Not a legal raise bid")
         else:
-          self.stage = Stage.ANNOUNCEMENTS
-          self.broadcast("Time for announcements")
+          self.king()
       else:
         self.players[idx].client.writegame("Cannot bid at this time")
 
@@ -118,8 +126,7 @@ class TarockGame:
           self.stage = Stage.RAISEBID
           self.broadcast("{0} has the bid at {1}.  Raise bid?".format(self.auction.highbidder.name, self.auction.livebid.name))
       elif self.stage == Stage.RAISEBID:
-        self.stage == Stage.ANNOUNCEMENTS
-        self.broadcast("Time for announcements")
+        self.king()
       else:
         self.players[idx].client.writegame("No passing at this time")
   
