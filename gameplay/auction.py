@@ -94,6 +94,12 @@ class Auction:
     else:
       return False
 
+  def callking():
+    if self.highbid > ContractName.KLOP and self.highbid < Contract.SOLOTHREE:
+      return True
+    else
+      return False
+
 class Contract:
   def __init__(self,name):
     self.name = name

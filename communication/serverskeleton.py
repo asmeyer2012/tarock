@@ -88,7 +88,7 @@ class TarockGame:
 
   #Internal function
   def king(self):
-    if self.auction.king:
+    if self.auction.callking():
       self.stage = Stage.KING
       self.broadcast("Call a king")
     else:
