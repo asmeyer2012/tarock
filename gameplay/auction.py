@@ -97,7 +97,7 @@ class Auction:
   def callking():
     if self.highbid > ContractName.KLOP and self.highbid < Contract.SOLOTHREE:
       return True
-    else
+    else:
       return False
 
 class Contract:
