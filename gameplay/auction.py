@@ -35,13 +35,14 @@ class Auction:
       continue
     next(self.tablec)
     self.livebidder = next(self.tablec)
-    self.highbidder = None
+    self.highbidder = self.livebidder #should we leave this blank to start?
     self.livebid = ContractName.UNDEFINED
     self.compulsoryklop = klop
     for p in table:
       p.passed = False
     self.passes = 0
-    self.done = False
+    #TODO: Should be initialized to false, just true for testing
+    self.done = True
 
   # returns True for legal bids, False for illegal bids
   def raisebid(self, player, bid):

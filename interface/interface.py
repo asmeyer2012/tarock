@@ -242,6 +242,8 @@ class CommandWindow:
         cards = self.client.handlen()
         for i in range(cards):
           self.gmWin.addLine(self.client.printCard(i))
+      elif nextKey == 'p': ## pass bid
+        self.client.passbid()
       ## how do I escape?
 
   def writemsg(self,name,mess):
