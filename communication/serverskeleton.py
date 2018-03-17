@@ -96,6 +96,10 @@ class TarockGame:
       self.broadcast("Time for announcements")
 
   def raisebid(self, idx, bid):
+    if not self.stage == Stage.BID:
+      if not self.stage == Stage.RAISEBID:
+        self.players[idx].client.writegame("No auction now")
+        return
     if not self.players[idx] == self.auction.livebidder:
       self.players[idx].client.writegame("You are not the current bidder")
     else:
@@ -115,6 +119,10 @@ class TarockGame:
         self.players[idx].client.writegame("Cannot bid at this time")
 
   def passbid(self, idx):
+    if not self.stage == Stage.BID:
+      if not self.stage == Stage.RAISEBID:
+        self.players[idx].client.writegame("No auction now")
+        return
     if not self.players[idx] == self.auction.livebidder:
       self.players[idx].client.writegame("You are not the current bidder")
     else:

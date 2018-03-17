@@ -63,7 +63,10 @@ class GameCommands:
     daemon.shutdown()
 
   def raisebid(self, bid):
-    tarock.raisebid(self.idx, bid)
+    if self.idx > -1:
+      tarock.raisebid(self.idx, bid)
+    else:
+      self.interface.gmWin.addLine("You must register before you can bid")
 
   def passbid(self):
     tarock.passbid(self.idx)

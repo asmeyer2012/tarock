@@ -5,6 +5,8 @@ import signal
 import curses
 import curses.ascii
 import sys
+sys.path.insert(0,'../')
+from gameplay.auction import *
 import time
 import Pyro4
 
@@ -212,7 +214,9 @@ class CommandWindow:
   ## handle idle operations, waiting for some specific command
   def idleLoop(self,stdscr): ## pass in standard cursor
     self.stdscr = stdscr
-    self.helpWin.addLine("Commands:      r - register   l - leave   d - deal   s - show hand")
+    self.helpWin.addLine("Commands:      b - bid   l - leave   d - deal   s - show hand p - pass")
+    self.gmWin.addLine(self.client.register(self.name))
+    self.gmWin.addLine(self.client.printPlayers())
     while True:
       self.returnCursor(stdscr)
       nextKey = self.getNextKey(stdscr)
@@ -227,10 +231,7 @@ class CommandWindow:
       elif nextKey == '\n': ## start writing a message
         if self.msgWin is None:
           raise ValueError("message window not set!")
-        self.messageLoop(stdscr)
-      elif nextKey == 'r': ## register command
-        self.gmWin.addLine(self.client.register(self.name))
-        self.gmWin.addLine(self.client.printPlayers())
+        self.messageLoop(stdscr, 0)
       elif nextKey == 'l': ## leave command
         print "Goodbye"
         time.sleep(1)
@@ -244,6 +245,22 @@ class CommandWindow:
           self.gmWin.addLine(self.client.printCard(i))
       elif nextKey == 'p': ## pass bid
         self.client.passbid()
+      elif nextKey == 'b': ## bid
+        self.gmWin.addLine("Bid options:")
+        i = 0
+        for c in ContractName:
+          self.gmWin.addLine('%2d: %s' % (i, c.name))
+          i += 1
+        arg = self.messageLoop(stdscr, 1)
+        bid = None
+        i = 0
+        for c in ContractName:
+          if i == arg:
+            bid = c
+            break
+          else:
+            i += 1
+        self.client.raisebid(bid)
       ## how do I escape?
 
   def writemsg(self,name,mess):
@@ -253,7 +270,9 @@ class CommandWindow:
       self.stdscr.deleteln()
 
   ## in message mode, get a message
-  def messageLoop(self,stdscr):
+  ## flg = 0 is for text messaging
+  ## flg = 1 is for getting an argument for a command
+  def messageLoop(self,stdscr, flg):
     line = ''
     lineend = ''
     curses.echo()
@@ -264,7 +283,10 @@ class CommandWindow:
         continue
       elif nextKey == '\n': ## display current text in message window and exit message mode
         mess = line+lineend
-        self.client.broadcast(self.name, mess)
+        if flg == 0:
+          self.client.broadcast(self.name, mess)
+        elif flg == 1:
+          return mess
         break
       elif nextKey == 'KEY_BACKSPACE': ## delete previous character
         ## because of echo, backspace also moves cursor
