@@ -137,6 +137,20 @@ class TarockGame:
         self.king()
       else:
         self.players[idx].client.writegame("No passing at this time")
+
+  def callking(self, idx, suit):
+    if self.stage == Stage.KING:
+      if self.auction.highbidder == self.players[idx]:
+        king = suit
+        self.broadcast("Called king: {0}".format(suit))
+        self.stage == Stage.ANNOUNCEMENTS
+      else:
+        self.players[idx].client.writegame("You cannot call the king")
+    else:
+      self.players[idx].client.writegame("Not time to call a king")
+
+  def playcard(self, idx, i):
+    pass
   
 
 daemon = Pyro4.Daemon()

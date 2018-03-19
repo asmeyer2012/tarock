@@ -261,6 +261,16 @@ class CommandWindow:
           else:
             i += 1
         self.client.raisebid(bid)
+      elif nextKey == 'c': ## play card
+        cards = self.client.handlen()
+        if cards ==  0:
+          self.gmWin.addLine("Hand empty")
+        else:
+          self.gmWin.addLine("Card options:")
+          for i in range(cards):
+            self.gmWin.addLine('%2d: %s' % (i, self.client.printCard(i)))
+          arg = self.messageLoop(stdscr, 1)
+          self.client.playcard(arg)
       ## how do I escape?
 
   def writemsg(self,name,mess):

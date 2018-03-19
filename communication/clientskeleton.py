@@ -71,6 +71,9 @@ class GameCommands:
   def passbid(self):
     tarock.passbid(self.idx)
 
+  def playcard(self, i):
+    tarock.playcard(self.idx, i)
+
   def broadcast(self, name, mess):
     tarock.broadcastmsg(name, mess)
 
