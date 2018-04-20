@@ -4,6 +4,11 @@ import os
 import signal
 import curses
 import curses.ascii
+import sys
+sys.path.insert(0,'../')
+from gameplay.auction import *
+import time
+import Pyro4
 
 class TimeoutError(Exception):
     pass
@@ -28,7 +33,99 @@ def timeout(seconds=10, error_message=os.strerror(errno.ETIME)):
 
     return decorator
 
+## present the game state
+## shamelessly copied from MessageWindow
+class GameWindow:
+  def __init__(self):
+    self.ndisp = 0
+    self.nlines = 14
+    self.offset = 2
+    self.preString = ''
+    self.win = curses.newwin(self.nlines,curses.COLS,self.offset,0)
+    self.lines = list()
+
+  def addLine(self,line):
+    if line == '':
+      self.bottomOfDisplay()
+      self.displayWindow()
+      return
+    ## check if line is longer than window
+    ## if so, chop it and add pieces
+    while line != '':
+      self.lines.append(line[:curses.COLS])
+      line = line[curses.COLS:]
+      ## if not at the end, keep the window where it was!
+      if self.ndisp > 0:
+        self.ndisp += 1
+    self.bottomOfDisplay()
+    self.displayWindow()
+
+  def bottomOfDisplay(self): ## go to end
+    self.ndisp = 0
+    self.displayWindow()
+
+  def displayWindow(self):
+    self.win.clear()
+    if len(self.lines) <= self.nlines: ## when not enough lines to fill screen
+      for i,line in enumerate(self.lines):
+        self.win.addstr(i,0,line)
+    elif self.ndisp == 0: ## when display is at most recent message
+      for i,line in enumerate(self.lines[-self.nlines:]):
+        self.win.addstr(i,0,line)
+    else: ## when display is not at most recent message
+      #for i,line in enumerate(self.lines[-self.ndisp-self.nlines:-self.ndisp]):
+      for i,line in enumerate(self.lines[\
+        -self.ndisp-self.nlines: max(-self.ndisp,self.nlines-len(self.lines)) ]):
+        self.win.addstr(i,0,line)
+    self.win.refresh()
+
+## keep a help bar at the bottom
+class HelpWindow:
+  def __init__(self):
+    self.ndisp = 0
+    self.nlines = 1
+    self.offset = 0
+    self.preSting = ''
+    self.win = curses.newwin(self.nlines,curses.COLS,self.offset,0)
+    self.lines = list()
+
+  def addLine(self,line):
+    if line == '':
+      self.bottomOfDisplay()
+      self.displayWindow()
+      return
+    ## check if line is longer than window
+    ## if so, chop it and add pieces
+    while line != '':
+      self.lines.append(line[:curses.COLS])
+      line = line[curses.COLS:]
+      ## if not at the end, keep the window where it was!
+      if self.ndisp > 0:
+        self.ndisp += 1
+    self.bottomOfDisplay()
+    self.displayWindow()
+
+  def bottomOfDisplay(self): ## go to end
+    self.ndisp = 0
+    self.displayWindow()
+
+  def displayWindow(self):
+    self.win.clear()
+    if len(self.lines) <= self.nlines: ## when not enough lines to fill screen
+      for i,line in enumerate(self.lines):
+        self.win.addstr(i,0,line)
+    elif self.ndisp == 0: ## when display is at most recent message
+      for i,line in enumerate(self.lines[-self.nlines:]):
+        self.win.addstr(i,0,line)
+    else: ## when display is not at most recent message
+      #for i,line in enumerate(self.lines[-self.ndisp-self.nlines:-self.ndisp]):
+      for i,line in enumerate(self.lines[\
+        -self.ndisp-self.nlines: max(-self.ndisp,self.nlines-len(self.lines)) ]):
+        self.win.addstr(i,0,line)
+    self.win.refresh()
+
 ## handle passing messages between people
+@Pyro4.expose
 class MessageWindow:
   def __init__(self):
     self.ndisp = 0 ## count backward from end of message stream
@@ -88,19 +185,26 @@ def timeoutGetKey(stdscr):
   return stdscr.getkey()
 
 ## control all the other windows and handle input
+@Pyro4.expose
 class CommandWindow:
   def __init__(self,name):
-    #self.msgWin = None
+    self.gmWin  = GameWindow()
     self.msgWin = MessageWindow()
+    self.helpWin = HelpWindow()
     self.name = name
     self.offset = 22
     self.win = curses.newwin(1,curses.COLS,self.offset,0)
+    ns = Pyro4.locateNS()
+    uri = ns.lookup("example.client.{0}".format(name))
+    self.client = Pyro4.Proxy(uri)
+    self.stdscr = None
     pass
 
   def getNextKey(self,stdscr):
     try:
       return timeoutGetKey(stdscr)
     except KeyboardInterrupt:
+      self.client.daemon.shutdown()
       raise ## fast quit with ctrl-C
     except:
       return ## catch timeout
@@ -109,6 +213,10 @@ class CommandWindow:
 
   ## handle idle operations, waiting for some specific command
   def idleLoop(self,stdscr): ## pass in standard cursor
+    self.stdscr = stdscr
+    self.helpWin.addLine("Commands:      b - bid   l - leave   d - deal   s - show hand p - pass")
+    self.gmWin.addLine(self.client.register(self.name))
+    self.gmWin.addLine(self.client.printPlayers())
     while True:
       self.returnCursor(stdscr)
       nextKey = self.getNextKey(stdscr)
@@ -123,11 +231,58 @@ class CommandWindow:
       elif nextKey == '\n': ## start writing a message
         if self.msgWin is None:
           raise ValueError("message window not set!")
-        self.messageLoop(stdscr)
+        self.messageLoop(stdscr, 0)
+      elif nextKey == 'l': ## leave command
+        print "Goodbye"
+        time.sleep(1)
+        self.client.leave()
+        break
+      elif nextKey == 'd': ## deal
+        self.client.deal()
+      elif nextKey == 's': ## show hand
+        cards = self.client.handlen()
+        for i in range(cards):
+          self.gmWin.addLine(self.client.printCard(i))
+      elif nextKey == 'p': ## pass bid
+        self.client.passbid()
+      elif nextKey == 'b': ## bid
+        self.gmWin.addLine("Bid options:")
+        i = 0
+        for c in ContractName:
+          self.gmWin.addLine('%2d: %s' % (i, c.name))
+          i += 1
+        arg = self.messageLoop(stdscr, 1)
+        bid = None
+        i = 0
+        for c in ContractName:
+          if i == arg:
+            bid = c
+            break
+          else:
+            i += 1
+        self.client.raisebid(bid)
+      elif nextKey == 'c': ## play card
+        cards = self.client.handlen()
+        if cards ==  0:
+          self.gmWin.addLine("Hand empty")
+        else:
+          self.gmWin.addLine("Card options:")
+          for i in range(cards):
+            self.gmWin.addLine('%2d: %s' % (i, self.client.printCard(i)))
+          arg = self.messageLoop(stdscr, 1)
+          self.client.playcard(arg)
       ## how do I escape?
 
+  def writemsg(self,name,mess):
+    self.msgWin.addLine(name,mess)
+    for i in range(curses.LINES-1,self.offset-1,-1):
+      self.stdscr.move(i,0)
+      self.stdscr.deleteln()
+
   ## in message mode, get a message
-  def messageLoop(self,stdscr):
+  ## flg = 0 is for text messaging
+  ## flg = 1 is for getting an argument for a command
+  def messageLoop(self,stdscr, flg):
     line = ''
     lineend = ''
     curses.echo()
@@ -137,10 +292,11 @@ class CommandWindow:
       if   nextKey is None:
         continue
       elif nextKey == '\n': ## display current text in message window and exit message mode
-        self.msgWin.addLine(self.name,line+lineend)
-        for i in range(curses.LINES-1,self.offset-1,-1):
-          stdscr.move(i,0)
-          stdscr.deleteln()
+        mess = line+lineend
+        if flg == 0:
+          self.client.broadcast(self.name, mess)
+        elif flg == 1:
+          return mess
         break
       elif nextKey == 'KEY_BACKSPACE': ## delete previous character
         ## because of echo, backspace also moves cursor
@@ -181,4 +337,3 @@ class CommandWindow:
         stdscr.addstr(y,x,lineend)
         stdscr.move(y,x)
     curses.noecho()
-

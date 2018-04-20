@@ -1,7 +1,8 @@
-
+from cards import *
 """
 I have no idea what I am doing
 """
+@Pyro4.expose
 class Player:
   def __init__(self,name):
     self.name = name
@@ -9,7 +10,10 @@ class Player:
     self.winnings = Pile()
     self.points = 0
     self.radli = 0
+    self.client = None
+    self.passed = False
     pass
+
   def takeTrick(self,trick):
     for i in range(len(trick)):
       self.winnings.addCard(trick.removeCard())

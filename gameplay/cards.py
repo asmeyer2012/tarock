@@ -1,8 +1,10 @@
 from enum import Enum
+import Pyro4
 
 """
 Card names
 """
+@Pyro4.expose
 class CardName(Enum):
   UNDEFINED = -1
   PAGAT = 0
@@ -36,6 +38,7 @@ class CardName(Enum):
 """
 Card suits
 """
+@Pyro4.expose
 class CardSuit(Enum):
   ## eventually these will be colored differently in curses
   UNDEFINED = -1
@@ -48,6 +51,7 @@ class CardSuit(Enum):
 """
 Container object for each card
 """
+@Pyro4.expose
 class Card:
   def __init__(self,name=CardName.UNDEFINED,suit=CardSuit.UNDEFINED):
     self.name = name
@@ -86,6 +90,7 @@ class Card:
 Pile is a group of more than one cards
 Could be talon, hand, trick, etc...
 """
+@Pyro4.expose
 class Pile:
   def __init__(self):
     self.pile = list()
@@ -98,6 +103,9 @@ class Pile:
     for card in cards:
       self.addCard(card)
     pass
+
+  def pilelen(self):
+    return len(self.pile)
 
   ## assign player to all cards in pile
   def assignPlayer(self,player):
@@ -154,11 +162,14 @@ class Pile:
 
   ## printing
   def printPile(self):
+    string = ''
     for card in self.pile:
-      print card.printCard()
-    pass
+      string += card.printCard()
+      string += '\n\r'
+    return string
+
   def printCard(self,i):
-    print self.pile[i].printCard()
+    return self.pile[i].printCard()
     pass
 
   ## get value of all cards in pile
@@ -167,4 +178,3 @@ class Pile:
     for card in self.pile:
       value += card.getValue()
     return value
-

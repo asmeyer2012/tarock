@@ -3,7 +3,7 @@ import os
 import sys
 
 from interface.interface import *
-#from communication.xxx import *
+from communication.clientskeleton import *
 
 playerName = 'aaron'
 if len(sys.argv) > 1:
@@ -14,6 +14,6 @@ pass
 
 ## initialize curses for interface
 stdscr = curses.initscr()
-cmdWin = CommandWindow(playerName)
-curses.wrapper(cmdWin.idleLoop)
+gc = GameCommands(playerName)
+curses.wrapper(gc.interface.idleLoop)
 
