@@ -33,3 +33,32 @@ Hosting I'll eventually do on my Raspberry Pi, depending on whether it's fast en
  this. If not, I'll see about setting up a dummy account on my desktop that only has enough
  privilege to run this python script.
 
+---
+
+Since this was a more detailed description, I'll repeat it here:
+
+The server and clients I've classified as communication, which I
+envision to be the "nuts and bolts", if I use your language. Pyro is
+meant to handle function calls from other processes, so there would be
+a "server" process that has ownership of all of the classes and class
+functions. The "clients" would be the processes controlled by each
+player, which defer to the server under the hood when they want to do
+anything. That way we don't have each of the processes trying to talk
+to all the other processes at once.
+
+The "interface" directory is all of the front-end stuff. This is how
+the user interacts with their own client process through text input,
+and handles printing information to the screen (I'm imagining some
+sort of chat box, a list of the cards in play and in hand, a game log
+of some sort, and a short reference of basic commands). So the
+interface takes the user commands and translates them into client
+function calls with either wrapper functions or direct function calls.
+
+Don't read into the name of "framework.py". I just wanted a parent
+process that I could test with. This will eventually be the process
+that stitches the three pieces together. It will create the server
+process (if it doesn't already exist), then create the player process,
+then do all of the registering via pyro such that the two processes
+can talk to each other. Then it goes to the curses idle loop, which is
+what the player will see as the basic game screen.
+

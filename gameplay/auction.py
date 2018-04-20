@@ -30,7 +30,7 @@ class Contract:
     self.name = name
     self.announcements = list()
     self.kontra = 1
-    self.compulsoryklop = False # Flag for next hand
+    self.compulsoryKlop = False # Flag for next hand
     pass
 
   def kontra():

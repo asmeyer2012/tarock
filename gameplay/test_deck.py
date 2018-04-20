@@ -10,7 +10,7 @@ pile.addCards( deck.getShuffled() )
 ### test card point values + ordering: OK!
 #pile.orderPile()
 #for card in pile.pile:
-#  value = contract.getCardValue(card)
+#  value = card.getValue()
 #  print card.printCard()+' : '+str(value)
 
 ### test card rankings, generic: OK!
