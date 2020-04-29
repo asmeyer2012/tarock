@@ -1,0 +1,6 @@
+#!/bin/bash
+
+echo "starting pyro4-ns and gameserver"
+pyro4-ns >/dev/null &
+python gameserver.py &
+
