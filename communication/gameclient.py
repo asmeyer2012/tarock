@@ -7,21 +7,22 @@ import Pyro4
 import Pyro4.util
 
 from communication.gameserver import GameServer
+from communication.menu import Menu
 
 sys.excepthook = Pyro4.util.excepthook
 
 @Pyro4.expose
 class GameClient:
-  def __init__(self,name):
-    self._name = name
-    self._registered = False ## registered with gameserver
+  def __init__(self):
     self._daemon = Pyro4.Daemon()
     self._uri = self._daemon.register( self)
+    self.BuildDefaultMenu()
     self.GetServer()
-    self._registered = self.srv.RegisterPlayer( self._name, self._uri)
-    if not( self._registered):
-      print("unsuccessful player registration")
-      sys.exit(1)
+    while (True):
+      self._name = input(" player name > ")
+      if self.srv.RegisterPlayer( self._name, self._uri):
+        break
+      print("unsuccessful player registration: name taken")
 
   def GetServer(self):
     self.srv = Pyro4.Proxy("PYRONAME:GameServer")
@@ -39,29 +40,66 @@ class GameClient:
     self._daemon.close()
     print('client daemon closed')
 
+  def BuildDefaultMenu(self):
+    self._menus = {} ## keep multiple menus
+    self._defmenu = Menu()
+    self._defmenu.AddEntry( 'quit', "Exit the program")
+    self._defmenu.AddEntry( 'master', "Request master action")
+
+  def BuildMenu(self, tag, menu):
+    self._menus[ tag] = menu
+
+  def RemoveMenu(self, tag, menu):
+    del self._menus[ tag]
+
+  def DisplayMenus(self):
+    print("  ---------- ")
+    self._defmenu.Display()
+    for tag in sorted( self._menus.keys()):
+      self._menus[ tag].Display()
+    print("  ---------- ")
+
+  def ProcessMenuEntry(self, req):
+    if req == 'quit':
+      return True
+    if req == 'master':
+      self.srv.ProcessMenuEntry( self._name, 'default', req)
+      return False
+    valid = False
+    for tag in self._menus.keys():
+      if self._menus[ tag].GetSelection( req):
+        valid = True
+        break
+    if valid:
+      self.srv.ProcessMenuEntry( self._name, tag, req)
+    return False
+
   def PrintMessage(self,msg):
     print(msg)
 
   def RequestLoop(self):
     ## custom requestLoop
     print('starting RequestLoop')
+    quit = False
     try:
-      while True:
-        print(time.asctime(), "Waiting for requests...")
+      while not( quit):
+        #print(time.asctime(), "Waiting for requests...")
+        self.DisplayMenus()
         ## create sets of the socket objects we will be waiting on
         pyroSockets = set(self._daemon.sockets)
         ## add stdin and sockets to list to wait for
         rs = [sys.stdin]
         rs.extend(pyroSockets)
-        sleepTimeSec = 10
+        sleepTimeSec = 100
         ## use select to wait for inputs
         inp, _, _ = select.select(rs, [], [], sleepTimeSec)
         eventsForDaemon = []
         ## sort events
         for s in inp:
           if s is sys.stdin:
-            line = sys.stdin.readline().rstrip()
-            #print("received keyboard input: ",line)
+            req = sys.stdin.readline().rstrip()
+            #print("received request: ",req)
+            quit = self.ProcessMenuEntry( req)
           elif s in pyroSockets:
             eventsForDaemon.append(s)
         ## process daemon events
@@ -72,8 +110,7 @@ class GameClient:
       print('exited RequestLoop')
 
 if __name__=="__main__":
-  name="me"
-  me = GameClient(name)
+  me = GameClient()
   #print("Ready. Object uri =", me._uri)
   print("GameClient ready")
   me.RequestLoop()
