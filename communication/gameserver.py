@@ -7,7 +7,7 @@ class GameServer(object):
   def __init__(self):
     self.player_hooks = {}
     self.player_uris = {}
-  def register_player(self, name, uri):
+  def RegisterPlayer(self, name, uri):
     if name in self.player_hooks.keys():
       return False
     print("saving uri")
@@ -19,13 +19,18 @@ class GameServer(object):
     #if self.player_hooks[ name].check_connection():
     #  print("player connection successful")
     return True
-  def unregister_player(self, name):
+  def UnregisterPlayer(self, name):
     del self.player_hooks[ name]
     del self.player_uris[ name]
-  def get_players(self):
-    return self.player_hooks.keys()
-  def check_connection(self):
+  def GetPlayers(self):
+    return self.player_hooks
+  def CheckConnection(self):
     return True
+  def BroadcastMessage(self,msg):
+    for name in self.player_hooks:
+      self.player_hooks[ name].PrintBroadcastMessage( msg)
+  def Ping(self):
+    self.BroadcastMessage("GameServer ping")
 
 if __name__=="__main__":
   Pyro4.Daemon.serveSimple( { GameServer: "GameServer" }, ns = True)
