@@ -1,0 +1,4 @@
+#!/bin/bash
+
+python communication/server_threads.py
+

@@ -34,11 +34,11 @@ class GameClient:
     except Pyro4.errors.NamingError:
       print("GameServer connection unsuccessful")
       sys.exit(1)
-  def PrintBroadcastMessage(self,msg):
+  def PrintMessage(self,msg):
     print(msg)
   def RequestLoop(self):
-    print('starting RequestLoop')
     ## custom requestLoop
+    print('starting RequestLoop')
     try:
       while True:
         print(time.asctime(), "Waiting for requests...")
@@ -54,8 +54,8 @@ class GameClient:
         ## sort events
         for s in inp:
           if s is sys.stdin:
-            val = sys.stdin.readline().rstrip()
-            print("received keyboard input: ",val)
+            line = sys.stdin.readline().rstrip()
+            #print("received keyboard input: ",line)
           elif s in pyroSockets:
             eventsForDaemon.append(s)
         ## process daemon events

@@ -28,7 +28,7 @@ class GameServer(object):
     return True
   def BroadcastMessage(self,msg):
     for name in self.player_hooks:
-      self.player_hooks[ name].PrintBroadcastMessage( msg)
+      self.player_hooks[ name].PrintMessage( msg)
   def Ping(self):
     self.BroadcastMessage("GameServer ping")
 

@@ -1,6 +1,0 @@
-#!/bin/bash
-
-echo "killing all python procs and pyro4-ns"
-pkill python
-pkill pyro4-ns
-

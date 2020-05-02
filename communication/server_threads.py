@@ -8,7 +8,7 @@ import socket
 import select
 import time
 
-from gameserver import GameServer
+from communication.gameserver import GameServer
 
 import Pyro4.core
 import Pyro4.naming
