@@ -1,8 +1,10 @@
 from enum import Enum
+from random import shuffle
 import Pyro4
 
 from communication.menu import Menu
 from gameplay.player import Player
+from gameplay.cards import CardName,CardSuit,Card
 
 ## enumerated class of game states
 class GameState(Enum):
@@ -15,11 +17,36 @@ class GameState(Enum):
 class GameControl:
   def __init__(self,server):
     self._gameState = GameState.NOGAME
-    self._server = server ## save server pointer for communication
+    self._server = server  ## save server pointer for communication
     self._playerReady = [] ## when players need to confirm ready
     self._playerNames = [] ## player names (in seat order)
     self._playerHooks = {} ## Player() class instances
-    #self._menu = Menu()
+    self.BuildDeck() ## build reference deck
+    #self._menu = Menu()    ## 'master' menu
+
+  def BuildDeck(self):
+    self._deck = []
+    for name in CardName:
+      if name.value == 0 or (name.value > 1 and name.value < 23):
+        self._deck.append( Card(name, CardSuit.TRUMP) )
+      pass
+    for name in CardName:
+      if   name.value > 0 and name.value < 5:
+        self._deck.append( Card(name, CardSuit.HEART) )
+        self._deck.append( Card(name, CardSuit.DIAMOND) )
+      elif name.value > 6 and name.value < 11:
+        self._deck.append( Card(name, CardSuit.CLUB) )
+        self._deck.append( Card(name, CardSuit.SPADE) )
+      elif name.value > 22:
+        self._deck.append( Card(name, CardSuit.CLUB) )
+        self._deck.append( Card(name, CardSuit.HEART) )
+        self._deck.append( Card(name, CardSuit.SPADE) )
+        self._deck.append( Card(name, CardSuit.DIAMOND) )
+    ## unitarity check
+    if len(self._deck) != 54:
+      for i,card in enumerate(self._deck):
+        print(card)
+      raise ValueError("Slovenian deck has wrong number of cards!")
 
   def ChangeState(self, state):
     if not( isinstance( state, GameState)):
@@ -32,12 +59,6 @@ class GameControl:
   def State(self):
     return self._gameState
 
-  #def BuildMenu(self):
-  #  self._menu = Menu()
-  #  self._menu.AddEntry( '', "Ready", True)
-  #  self._menu.AddEntry( 'end', "End the game")
-  #  self._menu.AddEntry( '2p', "Start two player game", True) ## debugging purposes
-
   ## build the mask for the requested menu
   def MenuMask(self, name, tag):
     if tag == 'default':
@@ -49,6 +70,13 @@ class GameControl:
           mask.discard('')
         mask.discard('end')
       return mask
+    else:
+      return set([])
+
+  ## build the mask for the requested menu
+  def InfoMask(self, name, tag):
+    if tag == 'Hand':
+      return self._playerHooks[ name].GetHandMask()
     else:
       return set([])
 
@@ -66,7 +94,9 @@ class GameControl:
         self._server.BroadcastMessage("{0} ready".format( name))
         if set( self._playerReady) == set( self._playerNames):
           self._playerReady = []
-          #self.ChangeState( GameState.BETTING)
+          self.Deal()
+          self.BroadcastHands()
+          self.ChangeState( GameState.BETTING)
 
   ## send score to every player
   def BroadcastScore(self):
@@ -75,6 +105,12 @@ class GameControl:
       score = self._playerHooks[ name].GetScore()
       msg = msg + "> {0:16s}: {1:>4d}\n".format(name,score)
     self._server.BroadcastMessage(msg)
+
+  ## send score to every player
+  def BroadcastHands(self):
+    for name in self._playerNames:
+      hand = self._playerHooks[ name].GetHand()
+      self._server._playerHooks[ name].BuildInfo(hand._tag, hand._entries, hand._mask)
 
   def StartGame(self):
     ## do initialization
@@ -91,6 +127,14 @@ class GameControl:
       self.BroadcastScore()
       ## start round
       self.ChangeState( GameState.ROUNDSTART)
+
+  def Deal(self):
+    shuffle( self._deck)
+    Nplayer = len( self._playerNames)
+    for i in range( len( self._deck)):
+      card = self._deck[i]
+      name = self._playerNames[i%Nplayer]
+      self._playerHooks[ name].AddToHand( card)
 
   def Cleanup(self):
     self._playerNames = []

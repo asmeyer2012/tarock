@@ -33,6 +33,10 @@ class GameServer(object):
     self._gameControl.ProcessMenuEntry( name, tag, req)
 
   ## build the mask for the requested menu
+  def InfoMask(self, name, tag):
+    return self._gameControl.InfoMask( name, tag)
+
+  ## build the mask for the requested menu
   def MenuMask(self, name, tag):
     return self._gameControl.MenuMask( name, tag)
 

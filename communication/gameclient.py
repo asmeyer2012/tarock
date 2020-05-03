@@ -8,6 +8,7 @@ import Pyro4.util
 
 from communication.gameserver import GameServer
 from communication.menu import Menu
+from communication.info import Info
 
 sys.excepthook = Pyro4.util.excepthook
 
@@ -17,6 +18,7 @@ class GameClient:
     self._daemon = Pyro4.Daemon()
     self._uri = self._daemon.register( self)
     self.BuildDefaultMenu()
+    self._info = {} ## info like hand, talon, ...
     self.GetServer()
     while (True):
       self._name = input(" player name > ")
@@ -53,17 +55,40 @@ class GameClient:
     self._menus['default'].AddEntry( '2p', "Start two player game", True) ## debugging purposes
 
   ## add or alter a menu of options
-  def BuildMenu(self, tag, menu):
-    self._menus[ tag] = menu
+  def BuildMenu(self, tag, entries, mask):
+    self._menus[ tag] = Menu()
+    self._menus[ tag]._entries = entries
+    self._menus[ tag]._mask = mask
+
+  ## add or alter a menu of options
+  def BuildInfo(self, tag, entries, mask):
+    self._info[ tag] = Info(tag)
+    self._info[ tag]._entries = entries
+    self._info[ tag]._mask = mask
 
   ## refresh the mask on available menus
   def RemaskMenus(self):
     for tag in self._menus.keys():
       self._menus[ tag]._mask = self._server.MenuMask( self._name, tag)
 
+  ## refresh the mask on available menus
+  def RemaskInfo(self):
+    for tag in self._info.keys():
+      self._info[ tag]._mask = self._server.InfoMask( self._name, tag)
+
   ## get rid of a menu that is not relevant
-  def RemoveMenu(self, tag, menu):
+  def RemoveMenu(self, tag):
     del self._menus[ tag]
+
+  ## get rid of a menu that is not relevant
+  def RemoveInfo(self, tag):
+    del self._info[ tag]
+
+  ## display all menus for client
+  def DisplayInfo(self):
+    print("  ---------- ")
+    for tag in sorted( self._info.keys()):
+      self._info[ tag].Display()
 
   ## display all menus for client
   def DisplayMenus(self):
@@ -99,6 +124,8 @@ class GameClient:
     try:
       while not( quit):
         #print(time.asctime(), "Waiting for requests...")
+        self.RemaskInfo()
+        self.DisplayInfo()
         self.RemaskMenus()
         self.DisplayMenus()
         ## create sets of the socket objects we will be waiting on
