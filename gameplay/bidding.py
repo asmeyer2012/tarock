@@ -1,20 +1,26 @@
 from communication.menu import Menu
 from gameplay.contracts import TeamContract
 
-class Betting:
+class Bidding:
   def __init__(self):
     self._leadingBid = None
     self._leadingBidder = None
     self.BuildMenus()
 
-  def BuildMenu(self):
-    self._betMenu = Menu()
-    self._betMenu.AddEntry( '3', 'Three w/ team')
+  def BuildMenus(self):
+    self._bidMenu = Menu()
+    self._bidMenu.AddEntry( 'pass', 'No bid')
+    self._bidMenu.AddEntry( '3', 'Three w/ team')
     self._announcementMenu = Menu()
-    self._announcementMenu.AddEntry( '', 'No announcement')
+    self._announcementMenu.AddEntry( 'pass', 'No announcement')
     self._announcementMenu.AddEntry( 'kontra', 'Kontra game')
+    self._kingMenu = Menu()
+    self._kingMenu.AddEntry( 'diamond', 'King of Diamonds')
+    self._kingMenu.AddEntry( 'spade', 'King of Spades')
+    self._kingMenu.AddEntry( 'heart', 'King of Hearts')
+    self._kingMenu.AddEntry( 'club', 'King of Clubs')
 
-  def BetMenu(self):
+  def BidMenu(self):
     return self._betMenu()
 
   def AnnouncementMenu(self):

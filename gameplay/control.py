@@ -5,13 +5,14 @@ import Pyro4
 from communication.menu import Menu
 from gameplay.player import Player
 from gameplay.cards import CardName,CardSuit,Card
+from gameplay.bidding import Bidding
 
 ## enumerated class of game states
 class GameState(Enum):
   NOGAME      = -1 ## no game in progress
   INITIALIZE  =  0 ## assign players, do data initialization
   ROUNDSTART  =  1
-  BETTING     =  2
+  BIDDING     =  2
   ROUNDFINISH =  3
 
 class GameControl:
@@ -23,6 +24,7 @@ class GameControl:
     self._playerHooks = {} ## Player() class instances
     self.BuildDeck() ## build reference deck
     #self._menu = Menu()    ## 'master' menu
+    self._bidding = Bidding() ## control class object
 
   def BuildDeck(self):
     self._deck = []
@@ -46,7 +48,7 @@ class GameControl:
     if len(self._deck) != 54:
       for i,card in enumerate(self._deck):
         print(card)
-      raise ValueError("Slovenian deck has wrong number of cards!")
+      raise ValueError("deck has wrong number of cards")
 
   def ChangeState(self, state):
     if not( isinstance( state, GameState)):
@@ -96,7 +98,7 @@ class GameControl:
           self._playerReady = []
           self.Deal()
           self.BroadcastHands()
-          self.ChangeState( GameState.BETTING)
+          self.ChangeState( GameState.BIDDING)
 
   ## send score to every player
   def BroadcastScore(self):
