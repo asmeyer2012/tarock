@@ -32,7 +32,7 @@ class GameServer(object):
   ## build the mask for the default menu
   def GetDefaultMenuMask(self):
     mask = set(['2p'])
-    if len( self._playerHooks.keys()) > 1:
+    if len( self._playerHooks.keys()) > 1 and self._gameControl.State() == GameState.NOGAME:
       mask.remove('2p')
     return mask
 
