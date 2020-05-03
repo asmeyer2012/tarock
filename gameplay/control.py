@@ -24,7 +24,7 @@ class GameControl:
     self._playerHooks = {} ## Player() class instances
     self.BuildDeck() ## build reference deck
     #self._menu = Menu()    ## 'master' menu
-    self._bidding = Bidding() ## control class object
+    self._bidding = Bidding(self._server) ## control class object
 
   def BuildDeck(self):
     self._deck = []
@@ -99,6 +99,7 @@ class GameControl:
           self.Deal()
           self.BroadcastHands()
           self.ChangeState( GameState.BIDDING)
+          self._bidding.StartBidding()
 
   ## send score to every player
   def BroadcastScore(self):
@@ -127,6 +128,7 @@ class GameControl:
       self._playerHooks[ name] = Player( name, self)
     if len( self._playerNames) == 2:
       self.BroadcastScore()
+      self._bidding.SetPlayers( self._playerNames)
       ## start round
       self.ChangeState( GameState.ROUNDSTART)
 
