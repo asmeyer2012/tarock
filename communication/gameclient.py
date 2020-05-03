@@ -49,12 +49,25 @@ class GameClient:
     self._defmenu.AddEntry( '', "Ready", True)
     self._defmenu.AddEntry( 'quit', "Exit the program")
     self._defmenu.AddEntry( 'master', "Request master action")
-    self._defmenu.AddEntry( 'end', "End the game")
+    self._defmenu.AddEntry( 'end', "End the game", True)
     self._defmenu.AddEntry( '2p', "Start two player game", True) ## debugging purposes
 
   ## add or alter a menu of options
   def BuildMenu(self, tag, menu):
     self._menus[ tag] = menu
+
+  ## alter mask of default menu
+  def RemaskDefaultMenu(self, mask):
+    self._defmenu._mask = mask
+
+  ## alter mask of existing menu
+  def RemaskMenu(self, tag, mask):
+    self._menus[ tag]._mask = mask
+
+  def RemaskMenus(self):
+    self.RemaskDefaultMenu( self._server.MenuMask( self._name))
+    for tag in self._menus.keys():
+      self.RemaskMenu( self._server.MenuMask( self._name, tag))
 
   ## get rid of a menu that is not relevant
   def RemoveMenu(self, tag, menu):
@@ -98,7 +111,7 @@ class GameClient:
     try:
       while not( quit):
         #print(time.asctime(), "Waiting for requests...")
-        self._defmenu._mask = self._server.GetDefaultMenuMask()
+        self.RemaskMenus()
         self.DisplayMenus()
         ## create sets of the socket objects we will be waiting on
         pyroSockets = set(self._daemon.sockets)
