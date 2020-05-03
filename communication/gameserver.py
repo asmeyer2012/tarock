@@ -32,19 +32,9 @@ class GameServer(object):
     self.BroadcastMessage("{0}: {1}/{2}".format( name, tag, req))
     self._gameControl.ProcessMenuEntry( name, tag, req)
 
-  ## build the mask for the default menu
-  def MenuMask(self, name, tag=None):
-    if tag is None:
-      mask = set(['2p','','end'])
-      if self._gameControl.State() == GameState.INITIALIZE:
-        mask.discard('')
-      if len( self._playerHooks.keys()) > 1 and self._gameControl.State() == GameState.NOGAME:
-        mask.discard('2p')
-      if self._gameControl.State() in [ GameState.INITIALIZE, GameState.ROUNDSTART ]:
-        mask.discard('end')
-      return mask
-    else:
-      return set([])
+  ## build the mask for the requested menu
+  def MenuMask(self, name, tag):
+    return self._gameControl.MenuMask( name, tag)
 
   ## add a player to the registry
   ## no communication with new player here! will cause process hang

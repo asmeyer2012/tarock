@@ -45,29 +45,21 @@ class GameClient:
   ## masking entries is controlled by GameServer
   def BuildDefaultMenu(self):
     self._menus = {} ## keep multiple menus
-    self._defmenu = Menu()
-    self._defmenu.AddEntry( '', "Ready", True)
-    self._defmenu.AddEntry( 'quit', "Exit the program")
-    self._defmenu.AddEntry( 'master', "Request master action")
-    self._defmenu.AddEntry( 'end', "End the game", True)
-    self._defmenu.AddEntry( '2p', "Start two player game", True) ## debugging purposes
+    self._menus['default'] = Menu()
+    self._menus['default'].AddEntry( 'quit', "Exit the program")
+    self._menus['default'].AddEntry( 'master', "Request master action")
+    self._menus['default'].AddEntry( '', "Ready", True)
+    self._menus['default'].AddEntry( 'end', "End the game", True)
+    self._menus['default'].AddEntry( '2p', "Start two player game", True) ## debugging purposes
 
   ## add or alter a menu of options
   def BuildMenu(self, tag, menu):
     self._menus[ tag] = menu
 
-  ## alter mask of default menu
-  def RemaskDefaultMenu(self, mask):
-    self._defmenu._mask = mask
-
-  ## alter mask of existing menu
-  def RemaskMenu(self, tag, mask):
-    self._menus[ tag]._mask = mask
-
+  ## refresh the mask on available menus
   def RemaskMenus(self):
-    self.RemaskDefaultMenu( self._server.MenuMask( self._name))
     for tag in self._menus.keys():
-      self.RemaskMenu( self._server.MenuMask( self._name, tag))
+      self._menus[ tag]._mask = self._server.MenuMask( self._name, tag)
 
   ## get rid of a menu that is not relevant
   def RemoveMenu(self, tag, menu):
@@ -76,7 +68,6 @@ class GameClient:
   ## display all menus for client
   def DisplayMenus(self):
     print("  ---------- ")
-    self._defmenu.Display()
     for tag in sorted( self._menus.keys()):
       self._menus[ tag].Display()
     print("  ---------- ")
@@ -85,9 +76,6 @@ class GameClient:
   def ProcessMenuEntry(self, req, verbose=True):
     if req == 'quit':
       return True
-    if (req in self._defmenu._entries.keys()) and not( req in self._defmenu._mask):
-      self._server.ProcessMenuEntry( self._name, 'default', req)
-      return False
     valid = False
     for tag in self._menus.keys():
       if self._menus[ tag].GetSelection( req):
