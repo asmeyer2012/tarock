@@ -16,7 +16,7 @@ class Menu:
   ## solicit user for input
   def GetSelection( self, req, verbose=False):
     if req in self._entries.keys():
-      return True
+      return not(req in self._mask)
     if verbose:
       print("invalid request \"{0}\"".format( req))
     return False
