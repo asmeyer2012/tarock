@@ -28,6 +28,15 @@ class GameControl:
   def State(self):
     return self._gameState
 
+  ## handle message forwarding to appropriate class object
+  def ProcessMenuEntry(self, name, tag, req):
+    if (tag,req) == ('default','2p'):
+      self.StartGame()
+    elif (tag,req) == ('default','end'):
+      self.EndGame()
+    elif (tag,req) == ('default','') and self.State() == GameState.INITIALIZE:
+      self.AddPlayer( name)
+
   ## send score to every player
   def BroadcastScore(self):
     msg = "  -- Scores:\n"
@@ -39,15 +48,25 @@ class GameControl:
   def StartGame(self):
     ## do initialization
     self.ChangeState( GameState.INITIALIZE)
+
+  def AddPlayer(self, name):
+    i = len( self._playerNames)
     ## two-player test
-    for i,name in enumerate( self._server.GetPlayers()[:2]):
-      self._server.BroadcastMessage("player {0} in seat {1}".format( name, i))
-      self._playerNames.append( name)
-      self._playerHooks[ name] = Player( name, self)
-    self.BroadcastScore()
-    ## start round
-    self.ChangeState( GameState.ROUNDSTART)
+    self._server.BroadcastMessage("player {0} in seat {1}".format( name, i))
+    self._playerNames.append( name)
+    self._playerHooks[ name] = Player( name, self)
+    if len( self._playerNames) == 2:
+      self.BroadcastScore()
+      ## start round
+      self.ChangeState( GameState.ROUNDSTART)
+
+  def Cleanup(self):
+    self._playerNames = []
+    self._playerHooks = {}
 
   def EndGame(self):
+    print("ending game")
+    self.BroadcastScore()
+    self.Cleanup()
     self.ChangeState( GameState.NOGAME)
 

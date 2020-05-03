@@ -30,14 +30,17 @@ class GameServer(object):
   @Pyro4.oneway
   def ProcessMenuEntry(self, name, tag, req):
     self.BroadcastMessage("{0}: {1}/{2}".format( name, tag, req))
-    if (tag,req) == ('default','2p'):
-      self.StartGame()
+    self._gameControl.ProcessMenuEntry( name, tag, req)
 
   ## build the mask for the default menu
   def GetDefaultMenuMask(self):
-    mask = set(['2p'])
+    mask = set(['2p','','end'])
+    if self._gameControl.State() == GameState.INITIALIZE:
+      mask.discard('')
     if len( self._playerHooks.keys()) > 1 and self._gameControl.State() == GameState.NOGAME:
-      mask.remove('2p')
+      mask.discard('2p')
+    if self._gameControl.State() in [ GameState.INITIALIZE, GameState.ROUNDSTART ]:
+      mask.discard('end')
     return mask
 
   ## add a player to the registry
@@ -60,19 +63,6 @@ class GameServer(object):
   ## get list of player names
   def GetPlayers(self):
     return list( self._playerHooks.keys())
-
-  ## start a new game
-  @Pyro4.oneway
-  def StartGame(self):
-    self.BroadcastMessage("starting game")
-    self._gameControl.StartGame()
-    self.EndGame()
-
-  ## end an existing game
-  @Pyro4.oneway
-  def EndGame(self):
-    self.BroadcastMessage("ending game")
-    self._gameControl.EndGame()
 
 ## can be started directly from running this script,
 ##   but handled cleanly starting from communication/server_threads.py

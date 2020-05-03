@@ -46,8 +46,10 @@ class GameClient:
   def BuildDefaultMenu(self):
     self._menus = {} ## keep multiple menus
     self._defmenu = Menu()
+    self._defmenu.AddEntry( '', "Ready", True)
     self._defmenu.AddEntry( 'quit', "Exit the program")
     self._defmenu.AddEntry( 'master', "Request master action")
+    self._defmenu.AddEntry( 'end', "End the game")
     self._defmenu.AddEntry( '2p', "Start two player game", True) ## debugging purposes
 
   ## add or alter a menu of options
