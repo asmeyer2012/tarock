@@ -3,6 +3,7 @@ import Pyro4
 
 from gameplay.player import Player
 
+## enumerated class of game states
 class GameState(Enum):
   NOGAME      = -1 ## no game in progress
   INITIALIZE  =  0 ## assign players, do data initialization
@@ -27,6 +28,7 @@ class GameControl:
   def State(self):
     return self._gameState
 
+  ## send score to every player
   def BroadcastScore(self):
     msg = "  -- Scores:\n"
     for name in self._playerNames:
