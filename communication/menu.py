@@ -5,21 +5,33 @@ class Menu:
   def __init__( self):
     self._entries = {}
     self._mask = set([]) ## which entries to mask
+    self._active = True
 
   ## display menu entries for user
   def Display( self):
-    for key in sorted( self._entries.keys()):
-      if not( key in self._mask):
-        line = self._entries[key]
-        print('> {0:10s}: {1}'.format(key,line))
+    if self._active:
+      for key in sorted( self._entries.keys()):
+        if not( key in self._mask):
+          line = self._entries[key]
+          print('> {0:10s}: {1}'.format(key,line))
 
   ## solicit user for input
   def GetSelection( self, req, verbose=False):
-    if req in self._entries.keys():
-      return not(req in self._mask)
-    if verbose:
-      print("invalid request \"{0}\"".format( req))
+    if self._active:
+      if req in self._entries.keys():
+        return not(req in self._mask)
+      if verbose:
+        print("invalid request \"{0}\"".format( req))
     return False
+
+  def IsActive( self):
+    return self._active
+
+  def Activate( self):
+    self._active = True
+
+  def Deactivate( self):
+    self._active = False
 
   ## add an entry to the menu
   def AddEntry( self, key, entry, masked=False):
