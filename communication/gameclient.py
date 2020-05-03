@@ -49,7 +49,7 @@ class GameClient:
     self._menus = {} ## keep multiple menus
     self._menus['default'] = Menu()
     self._menus['default'].AddEntry( 'quit', "Exit the program")
-    self._menus['default'].AddEntry( 'master', "Request master action")
+    self._menus['default'].AddEntry( 'master', "Request master action", True)
     self._menus['default'].AddEntry( '', "Ready", True)
     self._menus['default'].AddEntry( 'end', "End the game", True)
     self._menus['default'].AddEntry( '2p', "Start two player game", True) ## debugging purposes

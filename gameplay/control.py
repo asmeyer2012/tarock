@@ -62,7 +62,7 @@ class GameControl:
   ## build the mask for the requested menu
   def MenuMask(self, name, tag):
     if tag == 'default':
-      mask = set(['2p','','end'])
+      mask = set(['2p','','end','master'])
       if len( self._server.GetPlayers()) > 1 and self.State() == GameState.NOGAME:
         mask.discard('2p')
       if self.State() in [ GameState.INITIALIZE, GameState.ROUNDSTART ]:
