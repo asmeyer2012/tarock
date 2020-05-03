@@ -51,6 +51,9 @@ class GameServer(object):
     del self._playerUris[ name]
     self.BroadcastMessage( "{0} has left the room".format( name))
 
+  def GetPlayers(self):
+    return list( self._playerHooks.keys())
+
   @Pyro4.oneway
   def StartGame(self):
     self.BroadcastMessage("starting game")
