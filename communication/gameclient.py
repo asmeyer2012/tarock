@@ -45,6 +45,7 @@ class GameClient:
     self._defmenu = Menu()
     self._defmenu.AddEntry( 'quit', "Exit the program")
     self._defmenu.AddEntry( 'master', "Request master action")
+    self._defmenu.AddEntry( '2p', "Start two player game", True) ## debugging purposes
 
   def BuildMenu(self, tag, menu):
     self._menus[ tag] = menu
@@ -59,10 +60,10 @@ class GameClient:
       self._menus[ tag].Display()
     print("  ---------- ")
 
-  def ProcessMenuEntry(self, req):
+  def ProcessMenuEntry(self, req, verbose=True):
     if req == 'quit':
       return True
-    if req == 'master':
+    if (req in self._defmenu._entries.keys()) and not( req in self._defmenu._mask):
       self._server.ProcessMenuEntry( self._name, 'default', req)
       return False
     valid = False
@@ -72,6 +73,8 @@ class GameClient:
         break
     if valid:
       self._server.ProcessMenuEntry( self._name, tag, req)
+    elif verbose:
+      print("invalid request \"{0}\"".format( req))
     return False
 
   def PrintMessage(self,msg):
@@ -84,6 +87,7 @@ class GameClient:
     try:
       while not( quit):
         #print(time.asctime(), "Waiting for requests...")
+        self._defmenu._mask = self._server.GetDefaultMenuMask()
         self.DisplayMenus()
         ## create sets of the socket objects we will be waiting on
         pyroSockets = set(self._daemon.sockets)

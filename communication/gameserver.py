@@ -26,7 +26,17 @@ class GameServer(object):
   @Pyro4.oneway
   def ProcessMenuEntry(self, name, tag, req):
     self.BroadcastMessage("{0}: {1}/{2}".format( name, tag, req))
+    if (tag,req) == ('default','2p'):
+      self.StartGame()
 
+  ## build the mask for the default menu
+  def GetDefaultMenuMask(self):
+    mask = set(['2p'])
+    if len( self._playerHooks.keys()) > 1:
+      mask.remove('2p')
+    return mask
+
+  ## no communication with new player here! will cause process hang
   def RegisterPlayer(self, name, uri):
     if name in self._playerHooks.keys():
       return False
@@ -43,7 +53,14 @@ class GameServer(object):
 
   @Pyro4.oneway
   def StartGame(self):
-    pass
+    self.BroadcastMessage("starting game")
+    self._gameControl.StartGame()
+    self.EndGame()
+
+  @Pyro4.oneway
+  def EndGame(self):
+    self.BroadcastMessage("ending game")
+    self._gameControl.EndGame()
 
 ## can be started directly from running this script,
 ##   but handled cleanly starting from communication/server_threads.py

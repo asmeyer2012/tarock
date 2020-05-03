@@ -33,7 +33,7 @@ class Menu:
 
   ## hide a menu entry
   def MaskEntry( self, key):
-    self._mask.insert( key)
+    self._mask.add( key)
 
   ## unhide a menu entry
   def UnmaskEntry( self, key):
