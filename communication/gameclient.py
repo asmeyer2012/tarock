@@ -20,21 +20,21 @@ class GameClient:
     self.GetServer()
     while (True):
       self._name = input(" player name > ")
-      if self.srv.RegisterPlayer( self._name, self._uri):
+      if self._server.RegisterPlayer( self._name, self._uri):
         break
       print("unsuccessful player registration: name taken")
 
   def GetServer(self):
-    self.srv = Pyro4.Proxy("PYRONAME:GameServer")
+    self._server = Pyro4.Proxy("PYRONAME:GameServer")
     try:
-      if self.srv.CheckConnection():
+      if self._server.CheckConnection():
         print("GameServer connection successful")
     except Pyro4.errors.NamingError:
       print("GameServer connection unsuccessful")
       sys.exit(1)
 
   def Cleanup(self):
-    self.srv.UnregisterPlayer( self._name)
+    self._server.UnregisterPlayer( self._name)
     self._daemon.unregister( self)
     self._daemon.shutdown()
     self._daemon.close()
@@ -63,7 +63,7 @@ class GameClient:
     if req == 'quit':
       return True
     if req == 'master':
-      self.srv.ProcessMenuEntry( self._name, 'default', req)
+      self._server.ProcessMenuEntry( self._name, 'default', req)
       return False
     valid = False
     for tag in self._menus.keys():
@@ -71,7 +71,7 @@ class GameClient:
         valid = True
         break
     if valid:
-      self.srv.ProcessMenuEntry( self._name, tag, req)
+      self._server.ProcessMenuEntry( self._name, tag, req)
     return False
 
   def PrintMessage(self,msg):
