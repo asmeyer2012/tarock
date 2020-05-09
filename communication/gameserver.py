@@ -1,7 +1,7 @@
 from __future__ import print_function
 import Pyro4
 
-from gameplay.control import GameState,GameControl
+from communication.gamecontrol import GameState,GameControl
 
 @Pyro4.expose
 @Pyro4.behavior(instance_mode="single")
