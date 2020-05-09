@@ -8,7 +8,7 @@ class Player:
     self._score = 0
     #self._radliRemaining = 0
     #self._radliFinished = 0
-    self._handInfo = Info('Hand')
+    self._handInfo = Info('hand')
     self._hand = {}   ## Card class objects, keys are Card.ShortName()
     #self._tricks = {} ## Card class objects won in tricks
 
@@ -30,11 +30,13 @@ class Player:
     self._handInfo.AddEntry( card.ShortName(), card.LongName())
     self._hand[ card.ShortName()] = card
 
-  def GetHand(self):
-    return self._handInfo
+  def InfoMask(self, tag):
+    if tag == 'hand':
+      return self._handInfo._mask
 
-  def GetHandMask(self):
-    return self._handInfo._mask
+  def GetInfo(self, tag):
+    if tag == 'hand':
+      return self._handInfo
 
   ### add cards to hand when dealing or handling talon
   #def AddToTricks(self,card):

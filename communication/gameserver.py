@@ -32,13 +32,37 @@ class GameServer(object):
     self.BroadcastMessage("{0}: {1}/{2}".format( name, tag, req))
     self._gameControl.ProcessMenuEntry( name, tag, req)
 
-  ## build the mask for the requested menu
-  def InfoMask(self, name, tag):
-    return self._gameControl.InfoMask( name, tag)
+  ## send Menu to all players
+  def BroadcastMenu(self, tag):
+    for name in self._playerHooks.keys():
+      self.BuildMenu( name, tag)
+
+  def BroadcastInfo(self, tag):
+    for name in self._playerHooks.keys():
+      self.BuildInfo( name, tag)
+
+  ## ping the client telling them to request Menu
+  @Pyro4.oneway
+  def BuildMenu(self, name, tag):
+    self._playerHooks[ name].BuildMenu( tag)
+
+  @Pyro4.oneway
+  def BuildInfo(self, name, tag):
+    self._playerHooks[ name].BuildInfo( tag)
+
+  ## return the data to build a Menu instance
+  def GetMenu(self, name, tag):
+    return self._gameControl.GetMenu( name, tag)
+
+  def GetInfo(self, name, tag):
+    return self._gameControl.GetInfo( name, tag)
 
   ## build the mask for the requested menu
   def MenuMask(self, name, tag):
     return self._gameControl.MenuMask( name, tag)
+
+  def InfoMask(self, name, tag):
+    return self._gameControl.InfoMask( name, tag)
 
   ## add a player to the registry
   ## no communication with new player here! will cause process hang

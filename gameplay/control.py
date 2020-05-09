@@ -61,6 +61,22 @@ class GameControl:
   def State(self):
     return self._gameState
 
+  ## ping the client telling them to request Menu
+  def BuildMenu(self, name, tag):
+    self._server.BuildMenu( name, tag)
+
+  def BuildInfo(self, name, tag):
+    self._server.BuildInfo( name, tag)
+
+  ## return the data to build a Menu instance
+  def GetMenu(self, name, tag):
+    if tag == 'bidding':
+      return self._bidding.GetMenu( name, tag)
+
+  def GetInfo(self, name, tag):
+    if tag == 'hand':
+      return self._playerHooks[ name].GetInfo( tag)
+
   ## build the mask for the requested menu
   def MenuMask(self, name, tag):
     if tag == 'default':
@@ -72,13 +88,15 @@ class GameControl:
           mask.discard('')
         mask.discard('end')
       return mask
+    elif tag == 'bidding':
+      return self._bidding.MenuMask( name, tag)
     else:
       return set([])
 
   ## build the mask for the requested menu
   def InfoMask(self, name, tag):
-    if tag == 'Hand':
-      return self._playerHooks[ name].GetHandMask()
+    if tag == 'hand':
+      return self._playerHooks[ name].InfoMask( tag)
     else:
       return set([])
 
@@ -97,9 +115,11 @@ class GameControl:
         if set( self._playerReady) == set( self._playerNames):
           self._playerReady = []
           self.Deal()
-          self.BroadcastHands()
+          self._server.BroadcastInfo( 'hand')
           self.ChangeState( GameState.BIDDING)
           self._bidding.StartBidding()
+    elif tag == 'bidding':
+      self._bidding.ProcessMenuEntry( name, tag, req)
 
   ## send score to every player
   def BroadcastScore(self):
@@ -108,12 +128,6 @@ class GameControl:
       score = self._playerHooks[ name].GetScore()
       msg = msg + "> {0:16s}: {1:>4d}\n".format(name,score)
     self._server.BroadcastMessage(msg)
-
-  ## send score to every player
-  def BroadcastHands(self):
-    for name in self._playerNames:
-      hand = self._playerHooks[ name].GetHand()
-      self._server._playerHooks[ name].BuildInfo(hand._tag, hand._entries, hand._mask)
 
   def StartGame(self):
     ## do initialization

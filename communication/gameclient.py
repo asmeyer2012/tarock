@@ -55,16 +55,12 @@ class GameClient:
     self._menus['default'].AddEntry( '2p', "Start two player game", True) ## debugging purposes
 
   ## add or alter a menu of options
-  def BuildMenu(self, tag, entries, mask):
-    self._menus[ tag] = Menu()
-    self._menus[ tag]._entries = entries
-    self._menus[ tag]._mask = mask
+  def BuildMenu(self, tag):
+    self._menus[ tag] = self._server.GetMenu( self._name, tag)
 
   ## add or alter a menu of options
-  def BuildInfo(self, tag, entries, mask):
-    self._info[ tag] = Info(tag)
-    self._info[ tag]._entries = entries
-    self._info[ tag]._mask = mask
+  def BuildInfo(self, tag):
+    self._info[ tag] = self._server.GetInfo( self._name, tag)
 
   ## refresh the mask on available menus
   def RemaskMenus(self):
@@ -75,6 +71,14 @@ class GameClient:
   def RemaskInfo(self):
     for tag in self._info.keys():
       self._info[ tag]._mask = self._server.InfoMask( self._name, tag)
+
+  ## activate a menu
+  def ActivateMenu(self, tag):
+    self._menus[ tag].Activate()
+
+  ## deactivate a menu
+  def DeactivateMenu(self, tag):
+    self._menus[ tag].Deactivate()
 
   ## get rid of a menu that is not relevant
   def RemoveMenu(self, tag):

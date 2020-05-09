@@ -1,11 +1,16 @@
 from enum import Enum
 
+import Pyro4
+from Pyro4.util import SerializerBase
+
+Pyro4.config.SERIALIZER = "serpent"
+
 ## class for handling menu entries
 class Menu:
-  def __init__( self):
+  def __init__( self, active=True):
     self._entries = {}
     self._mask = set([]) ## which entries to mask
-    self._active = True
+    self._active = active
 
   ## display menu entries for user
   def Display( self):
@@ -50,4 +55,32 @@ class Menu:
   ## unhide a menu entry
   def UnmaskEntry( self, key):
     self._mask.discard( key)
+
+## need to define functions to serialize so Menu can be passed with Pyro
+def SerializeMenuToDict(menu):
+  out = {}
+  out["__class__"] = "Menu"
+  out["_active"] = menu._active
+  for key in menu._entries.keys():
+    out["_entries.{0}".format( key)] = menu._entries[ key]
+    if key in menu._mask:
+      out["_mask.{0}".format( key)] = True
+    else:
+      out["_mask.{0}".format( key)] = False
+  return out
+
+## need to define functions to serialize so Menu can be passed with Pyro
+def DeserializeMenuDict(classname, mdict):
+  menu = Menu()
+  menu._active = mdict["_active"]
+  for key in mdict.keys():
+    if key[:8] == '_entries':
+      xkey = key[9:]
+      menu._entries[ xkey] = mdict[ key]
+      if mdict[ "_mask.{0}".format( xkey)]:
+        menu._mask.add( xkey)
+  return menu
+
+SerializerBase.register_class_to_dict(Menu, SerializeMenuToDict)
+SerializerBase.register_dict_to_class("Menu", DeserializeMenuDict)
 

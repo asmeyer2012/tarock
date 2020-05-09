@@ -2,6 +2,11 @@ from enum import Enum
 
 from communication.menu import Menu
 
+import Pyro4
+from Pyro4.util import SerializerBase
+
+Pyro4.config.SERIALIZER = "serpent"
+
 ## class for handling generic info
 class Info:
   def __init__( self, tag):
@@ -41,4 +46,32 @@ class Info:
     menu._entries = dict( self._entries)
     menu._mask = set( self._mask)
     return menu
+
+## need to define functions to serialize so Menu can be passed with Pyro
+def SerializeInfoToDict(info):
+  out = {}
+  out["__class__"] = "Info"
+  out["_tag"] = info._tag
+  for key in info._entries.keys():
+    out["_entries.{0}".format( key)] = info._entries[ key]
+    if key in info._mask:
+      out["_mask.{0}".format( key)] = True
+    else:
+      out["_mask.{0}".format( key)] = False
+  return out
+
+## need to define functions to serialize so Menu can be passed with Pyro
+def DeserializeInfoDict(classname, mdict):
+  info = Menu()
+  info._tag = mdict["_tag"]
+  for key in mdict.keys():
+    if key[:8] == '_entries':
+      xkey = key[9:]
+      info._entries[ xkey] = mdict[ key]
+      if mdict[ "_mask.{0}".format( xkey)]:
+        info._mask.add( xkey)
+  return info
+
+SerializerBase.register_class_to_dict(Info, SerializeInfoToDict)
+SerializerBase.register_dict_to_class("Info", DeserializeInfoDict)
 
