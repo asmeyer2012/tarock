@@ -85,6 +85,12 @@ class GameServer(object):
   def GetPlayers(self):
     return list( self._playerHooks.keys())
 
+  ## only to be used for testing purposes!
+  @Pyro4.oneway
+  def ExecuteCommand(self, cmd):
+    print("executing command: {0}".format(cmd))
+    self._gameControl.ExecuteCommand( cmd)
+
 ## can be started directly from running this script,
 ##   but handled cleanly starting from communication/server_threads.py
 if __name__=="__main__":

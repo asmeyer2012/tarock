@@ -117,7 +117,7 @@ class GameControl:
           self.Deal()
           self._server.BroadcastInfo( 'hand')
           self.ChangeState( GameState.BIDDING)
-          self._bidding.StartBidding()
+          self.StartBidding()
     elif tag == 'bidding':
       self._bidding.ProcessMenuEntry( name, tag, req)
 
@@ -163,4 +163,12 @@ class GameControl:
     self.BroadcastScore()
     self.Cleanup()
     self.ChangeState( GameState.NOGAME)
+
+  @Pyro4.oneway
+  def StartBidding(self):
+    self._bidding.StartBidding()
+
+  ## only to be used for testing purposes!
+  def ExecuteCommand(self, cmd):
+    exec(cmd)
 

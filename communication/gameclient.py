@@ -64,12 +64,12 @@ class GameClient:
 
   ## refresh the mask on available menus
   def RemaskMenus(self):
-    for tag in self._menus.keys():
+    for tag in list( self._menus.keys()):
       self._menus[ tag]._mask = self._server.MenuMask( self._name, tag)
 
   ## refresh the mask on available menus
   def RemaskInfo(self):
-    for tag in self._info.keys():
+    for tag in list( self._info.keys()):
       self._info[ tag]._mask = self._server.InfoMask( self._name, tag)
 
   ## activate a menu
@@ -120,6 +120,36 @@ class GameClient:
   def PrintMessage(self,msg):
     print(msg)
 
+  def MainProcess(self,sleepTimeSec=100):
+    quit = False
+    self.RemaskInfo()
+    self.DisplayInfo()
+    self.RemaskMenus()
+    self.DisplayMenus()
+    ## create sets of the socket objects we will be waiting on
+    pyroSockets = set(self._daemon.sockets)
+    ## add stdin and sockets to list to wait for
+    rs = [sys.stdin]
+    rs.extend(pyroSockets)
+    ## select blocks evaluation until user enters a line or server calls client process
+    inp, _, _ = select.select(rs, [], [], sleepTimeSec)
+    eventsForDaemon = []
+    ## sort events
+    for s in inp:
+      ## user input
+      if s is sys.stdin:
+        req = sys.stdin.readline().rstrip()
+        #print("received request: ",req)
+        quit = self.ProcessMenuEntry( req)
+      ## server call
+      elif s in pyroSockets:
+        eventsForDaemon.append(s)
+    ## process daemon events
+    if eventsForDaemon:
+      #print("Daemon received a request")
+      self._daemon.events(eventsForDaemon)
+    return quit
+
   ## idle loop where requests are handled
   def RequestLoop(self):
     ## custom requestLoop
@@ -127,34 +157,7 @@ class GameClient:
     quit = False
     try:
       while not( quit):
-        #print(time.asctime(), "Waiting for requests...")
-        self.RemaskInfo()
-        self.DisplayInfo()
-        self.RemaskMenus()
-        self.DisplayMenus()
-        ## create sets of the socket objects we will be waiting on
-        pyroSockets = set(self._daemon.sockets)
-        ## add stdin and sockets to list to wait for
-        rs = [sys.stdin]
-        rs.extend(pyroSockets)
-        sleepTimeSec = 100
-        ## select blocks evaluation until user enters a line or server calls client process
-        inp, _, _ = select.select(rs, [], [], sleepTimeSec)
-        eventsForDaemon = []
-        ## sort events
-        for s in inp:
-          ## user input
-          if s is sys.stdin:
-            req = sys.stdin.readline().rstrip()
-            #print("received request: ",req)
-            quit = self.ProcessMenuEntry( req)
-          ## server call
-          elif s in pyroSockets:
-            eventsForDaemon.append(s)
-        ## process daemon events
-        if eventsForDaemon:
-          #print("Daemon received a request")
-          self._daemon.events(eventsForDaemon)
+        quit = self.MainProcess()
     except KeyboardInterrupt:
       ## can also quit with KeyboardInterrupt
       print('exited RequestLoop')
