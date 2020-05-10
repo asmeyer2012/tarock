@@ -62,8 +62,7 @@ def SerializeInfoToDict(info):
 
 ## need to define functions to serialize so Menu can be passed with Pyro
 def DeserializeInfoDict(classname, mdict):
-  info = Menu()
-  info._tag = mdict["_tag"]
+  info = Info(mdict["_tag"])
   for key in mdict.keys():
     if key[:8] == '_entries':
       xkey = key[9:]
