@@ -131,7 +131,7 @@ class GameClient:
     pyroSockets = set(self._daemon.sockets)
     ## add stdin and sockets to list to wait for
     ## windows listens to a globally-defined socket that is a child thread
-    if sys.platform == 'linux':
+    if sys.platform in [ 'linux' , 'darwin' ]:
       rs = [sys.stdin]
     elif sys.platform == 'win32':
       rs = [sockStdin]

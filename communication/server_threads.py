@@ -17,6 +17,9 @@ import Pyro4.socketutil
 Pyro4.config.SERVERTYPE = "thread"
 
 hostname = socket.gethostname()
+# If on Mac and you get the error
+#       socket.gaierror: [Errno 8] nodename nor servname provided, or not known
+# then add the line 127.0.0.1 <hostname> to /etc/hosts
 my_ip = Pyro4.socketutil.getIpAddress(None, workaround127=True)
 
 print("THREADED server type. Initializing services...")
