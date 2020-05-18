@@ -56,7 +56,7 @@ try:
     rs = [broadcastServer] ## only the broadcast server is directly usable as a select() object
     rs.extend(nameserverSockets)
     rs.extend(pyroSockets)
-    sleepTimeSec = 10
+    sleepTimeSec = .5
     rs, _, _ = select.select(rs, [], [], sleepTimeSec)
     eventsForNameserver = []
     eventsForDaemon = []
