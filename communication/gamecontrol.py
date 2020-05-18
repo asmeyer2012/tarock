@@ -72,6 +72,8 @@ class GameControl:
   def GetMenu(self, name, tag):
     if tag == 'bidding':
       return self._bidding.GetMenu( name, tag)
+    if tag == 'kings':
+      return self._bidding.GetMenu( name, tag)
 
   def GetInfo(self, name, tag):
     if tag == 'hand':
