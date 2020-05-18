@@ -3,6 +3,8 @@ import select
 import time
 import sys
 
+from threading import Thread
+
 import Pyro4
 import Pyro4.util
 
@@ -120,8 +122,7 @@ class GameClient:
   def PrintMessage(self,msg):
     print(msg)
 
-  def MainProcess(self,sleepTimeSec=100):
-    quit = False
+  def MainProcess(self,sleepTimeSec=3):
     self.RemaskInfo()
     self.DisplayInfo()
     self.RemaskMenus()
@@ -129,7 +130,13 @@ class GameClient:
     ## create sets of the socket objects we will be waiting on
     pyroSockets = set(self._daemon.sockets)
     ## add stdin and sockets to list to wait for
-    rs = [sys.stdin]
+    ## windows listens to a globally-defined socket that is a child thread
+    if sys.platform == 'linux':
+      rs = [sys.stdin]
+    elif sys.platform == 'win32':
+      rs = [sockStdin]
+    else:
+      raise OSError("unsupported platform \"{}\"".format(sys.platform))
     rs.extend(pyroSockets)
     ## select blocks evaluation until user enters a line or server calls client process
     inp, _, _ = select.select(rs, [], [], sleepTimeSec)
@@ -140,7 +147,7 @@ class GameClient:
       if s is sys.stdin:
         req = sys.stdin.readline().rstrip()
         #print("received request: ",req)
-        quit = self.ProcessMenuEntry( req)
+        self.quit = self.ProcessMenuEntry( req)
       ## server call
       elif s in pyroSockets:
         eventsForDaemon.append(s)
@@ -148,22 +155,53 @@ class GameClient:
     if eventsForDaemon:
       #print("Daemon received a request")
       self._daemon.events(eventsForDaemon)
-    return quit
+
+  ## give windows a handle to end the process
+  def EndLoop(self):
+    self.quit = True
 
   ## idle loop where requests are handled
   def RequestLoop(self):
     ## custom requestLoop
     print('starting RequestLoop')
-    quit = False
+    self.quit = False
     try:
-      while not( quit):
-        quit = self.MainProcess()
+      while not( self.quit):
+        self.MainProcess()
     except KeyboardInterrupt:
       ## can also quit with KeyboardInterrupt
-      print('exited RequestLoop')
+      print('exited RequestLoop on KeyboardInterrupt')
+      ## TODO: find some way to automate this
+      ## kill the windows stdin thread
+      if sys.platform == 'win32':
+        print("you must type \"quit\" to terminate stdin process")
 
 if __name__=="__main__":
   me = GameClient()
+
+  ## windows does not treat stdin like windows
+  ## need a forked thread that explicitly listens to stdin and sends to a socket
+  if sys.platform == 'win32':
+    ## idle loop to listen to stdin
+    def CaptureStdin(sock,client):
+      quit = False
+      while not( quit):
+        req = sys.stdin.readline().rstrip()
+        quit = client.ProcessMenuEntry( req)
+        if quit:
+          client.EndLoop()
+
+    ## create the globally-defined socket for stdin
+    ## AF_INET is address family protocol to use => default choice
+    ## SOCK_DGRAM is the socket type to use      => default choice
+    sockStdin = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+    ## start a child thread listening to stdin
+    ## accepts GameClient and socket as argument
+    winStdinTd = Thread(target=CaptureStdin, args=(sockStdin,me))
+    winStdinTd.start()
+    print("started thread for windows stdin input")
+
   #print("Ready. Object uri =", me._uri)
   print("GameClient ready")
   me.RequestLoop()
