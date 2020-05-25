@@ -65,19 +65,14 @@ class GameControl:
   def BuildMenu(self, name, tag):
     self._server.BuildMenu( name, tag)
 
-  def BuildInfo(self, name, tag):
-    self._server.BuildInfo( name, tag)
-
   ## return the data to build a Menu instance
   def GetMenu(self, name, tag):
     if tag == 'bidding':
       return self._bidding.GetMenu( name, tag)
     if tag == 'kings':
       return self._bidding.GetMenu( name, tag)
-
-  def GetInfo(self, name, tag):
     if tag == 'hand':
-      return self._playerHooks[ name].GetInfo( tag)
+      return self._playerHooks[ name].GetMenu( tag)
 
   ## build the mask for the requested menu
   def MenuMask(self, name, tag):
@@ -92,13 +87,8 @@ class GameControl:
       return mask
     elif tag == 'bidding':
       return self._bidding.MenuMask( name, tag)
-    else:
-      return set([])
-
-  ## build the mask for the requested menu
-  def InfoMask(self, name, tag):
-    if tag == 'hand':
-      return self._playerHooks[ name].InfoMask( tag)
+    elif tag == 'hand':
+      return self._playerHooks[ name].MenuMask( tag)
     else:
       return set([])
 
@@ -117,7 +107,7 @@ class GameControl:
         if set( self._playerReady) == set( self._playerNames):
           self._playerReady = []
           self.Deal()
-          self._server.BroadcastInfo( 'hand')
+          self._server.BroadcastMenu( 'hand')
           self.ChangeState( GameState.BIDDING)
           self.StartBidding()
     elif tag == 'bidding':

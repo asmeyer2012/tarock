@@ -7,18 +7,28 @@ Pyro4.config.SERIALIZER = "serpent"
 
 ## class for handling menu entries
 class Menu:
-  def __init__( self, active=True):
+  def __init__( self, info=False, active=True):
     self._entries = {}
     self._mask = set([]) ## which entries to mask
+    self._info = info
     self._active = active
 
   ## display menu entries for user
   def Display( self):
-    if self._active:
+    if self._active and not( self._info):
       for key in sorted( self._entries.keys()):
         if not( key in self._mask):
           line = self._entries[key]
           print('> {0:10s}: {1}'.format(key,line))
+
+  ## display menu entries for user
+  def DisplayInfo( self, tag):
+    if self._active and self._info:
+      print('   {0}'.format( tag))
+      for key in sorted( self._entries.keys()):
+        if not( key in self._mask):
+          line = self._entries[key]
+          print('>     {0}'.format(line))
 
   ## solicit user for input
   def GetSelection( self, req, verbose=False):
@@ -61,6 +71,7 @@ def SerializeMenuToDict(menu):
   out = {}
   out["__class__"] = "Menu"
   out["_active"] = menu._active
+  out["_info"] = menu._info
   for key in menu._entries.keys():
     out["_entries.{0}".format( key)] = menu._entries[ key]
     if key in menu._mask:
@@ -73,6 +84,7 @@ def SerializeMenuToDict(menu):
 def DeserializeMenuDict(classname, mdict):
   menu = Menu()
   menu._active = mdict["_active"]
+  menu._info = mdict["_info"]
   for key in mdict.keys():
     if key[:8] == '_entries':
       xkey = key[9:]

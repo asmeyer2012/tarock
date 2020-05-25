@@ -10,7 +10,6 @@ import Pyro4.util
 
 from communication.gameserver import GameServer
 from communication.menu import Menu
-from communication.info import Info
 
 sys.excepthook = Pyro4.util.excepthook
 
@@ -54,30 +53,20 @@ class GameClient:
     self._menus['default'].AddEntry( '', "Ready", True)
     self._menus['default'].AddEntry( 'end', "End the game", True)
     self._menus['default'].AddEntry( '2p', "Start two player game", True) ## debugging purposes
-    self._info = {}
-    self._info['messages'] = Info('Messages')
+    self._menus['messages'] = Menu( info=True)
 
   ## add or alter a menu of options
   def BuildMenu(self, tag):
     self._menus[ tag] = self._server.GetMenu( self._name, tag)
 
-  ## add or alter a menu of options
-  def BuildInfo(self, tag):
-    self._info[ tag] = self._server.GetInfo( self._name, tag)
-
   ## refresh the mask on available menus
   def RemaskMenus(self):
     for tag in list( self._menus.keys()):
-      self._menus[ tag]._mask = self._server.MenuMask( self._name, tag)
-
-  ## refresh the mask on available menus
-  def RemaskInfo(self):
-    for tag in list( self._info.keys()):
       if tag == 'messages':
-        keys = sorted( self._info[ tag]._entries.keys())
-        self._info[ tag]._mask = set( keys[:-10])
+        keys = sorted( self._menus[ tag]._entries.keys())
+        self._menus[ tag]._mask = set( keys[:-10])
       else:
-        self._info[ tag]._mask = self._server.InfoMask( self._name, tag)
+        self._menus[ tag]._mask = self._server.MenuMask( self._name, tag)
 
   ## activate a menu
   def ActivateMenu(self, tag):
@@ -91,15 +80,11 @@ class GameClient:
   def RemoveMenu(self, tag):
     del self._menus[ tag]
 
-  ## get rid of a menu that is not relevant
-  def RemoveInfo(self, tag):
-    del self._info[ tag]
-
   ## display all menus for client
   def DisplayInfo(self):
     print("  ---------- ")
-    for tag in sorted( self._info.keys()):
-      self._info[ tag].Display()
+    for tag in sorted( self._menus.keys()):
+      self._menus[ tag].DisplayInfo( tag)
 
   ## display all menus for client
   def DisplayMenus(self):
@@ -125,12 +110,11 @@ class GameClient:
 
   ## print message only to this client
   def PrintMessage(self,msg):
-    self._info['messages'].AddEntry( str( time.ctime()), msg)
+    self._menus['messages'].AddEntry( str( time.ctime()), msg)
 
   def MainProcess(self,sleepTimeSec=3):
-    self.RemaskInfo()
-    self.DisplayInfo()
     self.RemaskMenus()
+    self.DisplayInfo()
     self.DisplayMenus()
     ## create sets of the socket objects we will be waiting on
     pyroSockets = set(self._daemon.sockets)

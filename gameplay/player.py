@@ -1,5 +1,5 @@
 
-from communication.info import Info
+from communication.info import Menu
 
 class Player:
   def __init__(self,name,server):
@@ -8,7 +8,7 @@ class Player:
     self._score = 0
     #self._radliRemaining = 0
     #self._radliFinished = 0
-    self._handInfo = Info('hand')
+    self._handMenu = Menu(info=True)
     self._hand = {}   ## Card class objects, keys are Card.ShortName()
     #self._tricks = {} ## Card class objects won in tricks
 
@@ -27,16 +27,16 @@ class Player:
 
   ## add cards to hand when dealing or handling talon
   def AddToHand(self,card):
-    self._handInfo.AddEntry( card.ShortName(), card.LongName())
+    self._handMenu.AddEntry( card.ShortName(), card.LongName())
     self._hand[ card.ShortName()] = card
 
-  def InfoMask(self, tag):
+  def MenuMask(self, tag):
     if tag == 'hand':
-      return self._handInfo._mask
+      return self._handMenu._mask
 
-  def GetInfo(self, tag):
+  def GetMenu(self, tag):
     if tag == 'hand':
-      return self._handInfo
+      return self._handMenu
 
   ### add cards to hand when dealing or handling talon
   #def AddToTricks(self,card):
@@ -44,5 +44,5 @@ class Player:
 
   ### when a card is played or laid down, just mask rather than remove
   #def MaskCard(self,card):
-  #  self._handInfo.MaskEntry( card.ShortName())
+  #  self._handMenu.MaskEntry( card.ShortName())
 
