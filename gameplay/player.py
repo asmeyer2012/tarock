@@ -1,5 +1,5 @@
 
-from communication.info import Menu
+from communication.menu import Menu
 
 class Player:
   def __init__(self,name,server):
