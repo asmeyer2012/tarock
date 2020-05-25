@@ -20,7 +20,6 @@ class GameClient:
     self._daemon = Pyro4.Daemon()
     self._uri = self._daemon.register( self)
     self.BuildDefaultMenu()
-    self._info = {} ## info like hand, talon, ...
     self.GetServer()
     while (True):
       self._name = input(" player name > ")
@@ -55,6 +54,8 @@ class GameClient:
     self._menus['default'].AddEntry( '', "Ready", True)
     self._menus['default'].AddEntry( 'end', "End the game", True)
     self._menus['default'].AddEntry( '2p', "Start two player game", True) ## debugging purposes
+    self._info = {}
+    self._info['messages'] = Info('Messages')
 
   ## add or alter a menu of options
   def BuildMenu(self, tag):
@@ -72,7 +73,11 @@ class GameClient:
   ## refresh the mask on available menus
   def RemaskInfo(self):
     for tag in list( self._info.keys()):
-      self._info[ tag]._mask = self._server.InfoMask( self._name, tag)
+      if tag == 'messages':
+        keys = sorted( self._info[ tag]._entries.keys())
+        self._info[ tag]._mask = set( keys[:-10])
+      else:
+        self._info[ tag]._mask = self._server.InfoMask( self._name, tag)
 
   ## activate a menu
   def ActivateMenu(self, tag):
@@ -120,7 +125,7 @@ class GameClient:
 
   ## print message only to this client
   def PrintMessage(self,msg):
-    print(msg)
+    self._info['messages'].AddEntry( str( time.ctime()), msg)
 
   def MainProcess(self,sleepTimeSec=3):
     self.RemaskInfo()
