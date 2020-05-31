@@ -9,11 +9,12 @@ from gameplay.bidding import Bidding
 
 ## enumerated class of game states
 class GameState(Enum):
+  HANGGAME    = -2 ## player exits prematurely, place hold on game
   NOGAME      = -1 ## no game in progress
   INITIALIZE  =  0 ## assign players, do data initialization
-  ROUNDSTART  =  1
-  BIDDING     =  2
-  ROUNDFINISH =  3
+  ROUNDSTART  =  1 ## call for skis round, manipulations of game
+  BIDDING     =  2 ## do bidding, call king, talon assignment
+  ROUNDFINISH =  3 ## assign scores, redo hand, clean up
 
 class GameControl:
   def __init__(self,server):
@@ -58,6 +59,7 @@ class GameControl:
     self._gameState = state
     self._server.BroadcastMessage("Game entered state {0}".format( state))
 
+  ## getter function for GameState
   def State(self):
     return self._gameState
 
@@ -125,6 +127,7 @@ class GameControl:
     ## do initialization
     self.ChangeState( GameState.INITIALIZE)
 
+  ## add a player to the game
   def AddPlayer(self, name):
     i = len( self._playerNames)
     ## two-player test
@@ -138,6 +141,11 @@ class GameControl:
       ## start round
       self.ChangeState( GameState.ROUNDSTART)
 
+  ## getter function for the players in this game
+  def Players(self):
+    return self._playerNames
+
+  ## deal the cards and assign to players
   def Deal(self):
     shuffle( self._deck)
     Nplayer = len( self._playerNames)
@@ -146,7 +154,11 @@ class GameControl:
       name = self._playerNames[i%Nplayer]
       self._playerHooks[ name].AddToHand( card)
 
+  def CleanupRound(self):
+    pass
+
   def Cleanup(self):
+    self._playerReady = []
     self._playerNames = []
     self._playerHooks = {}
 

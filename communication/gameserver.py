@@ -55,9 +55,16 @@ class GameServer(object):
   def RegisterPlayer(self, name, uri):
     if name in self._playerHooks.keys():
       return False
+    ## messages must occur before registering player!
     self.BroadcastMessage( "{0} has joined the room".format( name))
+    if (self._gameControl.State() == GameState.HANGGAME and
+        name in self._gameControl.Players()):
+      self.BroadcastMessage( "resuming game at round start")
+      self._gameControl.ChangeState( GameState.ROUNDSTART) ## internal BroadcastMessage
+    ## complete registration of player
     self._playerUris[ name] = uri
     self._playerHooks[ name] = Pyro4.Proxy( uri)
+    print( "registered player {0}".format( name))
     return True
 
   ## when a player leaves, remove them from the registry
@@ -65,7 +72,15 @@ class GameServer(object):
   def UnregisterPlayer(self, name):
     del self._playerHooks[ name]
     del self._playerUris[ name]
+    print( "unregistered player {0}".format( name))
     self.BroadcastMessage( "{0} has left the room".format( name))
+    if self._gameControl.State() == GameState.INITIALIZE:
+      ## not far enough to matter, just reset
+      self._gameControl.Cleanup()
+      self._gameControl.ChangeState( GameState.NOGAME)
+    elif self._gameControl.State() != GameState.NOGAME:
+      self._gameControl.CleanupRound()
+      self._gameControl.ChangeState( GameState.HANGGAME)
 
   ## get list of player names
   def GetPlayers(self):
