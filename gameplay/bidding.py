@@ -5,12 +5,13 @@ class Bidding:
   def __init__(self, server):
     self._server = server
     self._bidders = {} ## key is bidder condition, value is name of bidder
+    self._talon = {} ## dictionary to hold talon cards temporarily
     self._leadingBid = None
     self._playerNames = []
+    self._contracts = {'K': 0, '3': 10, '2': 20, '1': 30,
+                       'S3': 40, 'S2': 50, 'S1': 60, 'B': 70,
+                       'S0': 80, 'OB': 90, 'CV': 125, 'V': 250}
     self.InitializeMenus()
-    self.contracts = {'K': 0, '3': 10, '2': 20, '1': 30,
-                      'S3': 40, 'S2': 50, 'S1': 60, 'B': 70,
-                      'S0': 80, 'OB': 90, 'CV': 125, 'V': 250}
 
   def InitializeMenus(self):
     self._bidMenu = Menu()
@@ -49,11 +50,11 @@ class Bidding:
       # Mask off any bids lower than current bid
       else:
         val = 10
-        for ct,v in self.contracts.items():
+        for ct,v in self._contracts.items():
           if ct == self._leadingBid:
             val = v
         #TODO: Update to allow for precendence
-        out = dict((c,v) for c,v in self.contracts.items() if v <= val)
+        out = dict((c,v) for c,v in self._contracts.items() if v <= val)
         for c in out:
           mask.add(c)
       return mask
@@ -100,6 +101,8 @@ class Bidding:
         elif len(self._bidders['passed']) == len(self._playerNames):
           self.EndBidding()
       self.NextActivePlayer()
+    elif name == self._bidders['active'] and tag == 'kings':
+      self._server._playerHooks[ self._bidders['active']].DeactivateMenu( 'kings')
 
   def NextActivePlayer(self):
     i = self._playerNames.index( self._bidders['active'])
@@ -136,4 +139,9 @@ class Bidding:
     if req == '3':
       return TeamContract( 3, self._leadingBidder)
     raise ValueError("invalid contract")
+
+  ## add cards to talon when dealing
+  ## just save here for now; will be handled by contract later
+  def AddToTalon(self, card):
+    self._talon[ card.ShortName()] = card
 

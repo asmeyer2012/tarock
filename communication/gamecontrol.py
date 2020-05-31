@@ -24,8 +24,8 @@ class GameControl:
     self._playerNames = [] ## player names (in seat order)
     self._playerHooks = {} ## Player() class instances
     self.BuildDeck() ## build reference deck
-    #self._menu = Menu()    ## 'master' menu
     self._bidding = Bidding(self._server) ## control class object
+    #self._contract = Contract(self._server) ## control class object
 
   def BuildDeck(self):
     self._deck = []
@@ -51,6 +51,7 @@ class GameControl:
         print(card)
       raise ValueError("deck has wrong number of cards")
 
+  ## change GameState
   def ChangeState(self, state, verbose=True):
     if not( isinstance( state, GameState)):
       self._server.BroadcastMessage(
@@ -113,7 +114,7 @@ class GameControl:
           self._server.BroadcastMenu( 'hand')
           self.ChangeState( GameState.BIDDING)
           self.StartBidding()
-    elif tag == 'bidding':
+    elif tag in ['bidding','kings']:
       self._bidding.ProcessMenuEntry( name, tag, req)
 
   ## send score to every player
@@ -150,7 +151,12 @@ class GameControl:
   def Deal(self):
     shuffle( self._deck)
     Nplayer = len( self._playerNames)
-    for i in range( len( self._deck)):
+    ## first ones always go to Blathers
+    for i in range( 6):
+      card = self._deck[i]
+      self._bidding.AddToTalon( card)
+    ## add cards to player hands
+    for i in range( 6, len( self._deck)):
       card = self._deck[i]
       name = self._playerNames[i%Nplayer]
       self._playerHooks[ name].AddToHand( card)
