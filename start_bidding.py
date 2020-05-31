@@ -22,7 +22,7 @@ if len( server.GetPlayers()) == 2:
     me.MainProcess(.01)
   server.ExecuteCommand("self.ChangeState( GameState.BIDDING)")
   server.ExecuteCommand("self.StartBidding()")
-  server.BroadcastInfo( 'hand')
+  server.BroadcastMenu( 'hand')
   me.MainProcess(.01)
 
 print("start loop")
