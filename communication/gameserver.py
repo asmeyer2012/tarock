@@ -3,6 +3,11 @@ import Pyro4
 
 from communication.gamecontrol import GameState,GameControl
 
+## use this for options that should not be available normally
+## -- adds option for client to throw exceptions
+## -- adds option to probe GameControl using ExecuteCommand()
+_debug = True
+
 @Pyro4.expose
 @Pyro4.behavior(instance_mode="single")
 class GameServer(object):
@@ -54,7 +59,9 @@ class GameServer(object):
   ## no communication with new player here! will cause process hang
   def RegisterPlayer(self, name, uri):
     if name in self._playerHooks.keys():
-      return False
+      ## if player is still active, can't take this name
+      if self.CheckPlayerConnection( name):
+        return False
     ## messages must occur before registering player!
     self.BroadcastMessage( "{0} has joined the room".format( name))
     if (self._gameControl.State() == GameState.HANGGAME and
@@ -69,28 +76,49 @@ class GameServer(object):
 
   ## when a player leaves, remove them from the registry
   @Pyro4.oneway
-  def UnregisterPlayer(self, name):
+  def UnregisterPlayer(self, name, verbose=True):
     del self._playerHooks[ name]
     del self._playerUris[ name]
-    print( "unregistered player {0}".format( name))
-    self.BroadcastMessage( "{0} has left the room".format( name))
+    if verbose:
+      print( "unregistered player {0}".format( name))
+      self.BroadcastMessage( "{0} has left the room".format( name))
     if self._gameControl.State() == GameState.INITIALIZE:
       ## not far enough to matter, just reset
       self._gameControl.Cleanup()
-      self._gameControl.ChangeState( GameState.NOGAME)
+      self._gameControl.ChangeState( GameState.NOGAME, verbose)
     elif self._gameControl.State() != GameState.NOGAME:
       self._gameControl.CleanupRound()
-      self._gameControl.ChangeState( GameState.HANGGAME)
+      self._gameControl.ChangeState( GameState.HANGGAME, verbose)
 
   ## get list of player names
   def GetPlayers(self):
     return list( self._playerHooks.keys())
 
+  ## check if player is connected. if not, unregister them
+  def CheckPlayerConnection(self, name):
+    try:
+      self._playerHooks[ name]._pyroBind()
+      print("player \"{0}\" is still active".format( name))
+      return True
+    except Pyro4.errors.CommunicationError:
+      self.UnregisterPlayer( name, verbose=False)
+      print("unregistered unreachable player \"{0}\"".format( name))
+      self.BroadcastMessage("unregistered unreachable player \"{0}\"".format( name))
+      return False
+
+  ## remove players that have disconnected prematurely
+  def RecoverBrokenConnection(self):
+    print( self._playerHooks)
+    for name in list( self._playerHooks.keys()):
+      self.CheckPlayerConnection( name)
+    return True
+
   ## only to be used for testing purposes!
-  @Pyro4.oneway
-  def ExecuteCommand(self, cmd):
-    print("executing command: {0}".format(cmd))
-    self._gameControl.ExecuteCommand( cmd)
+  if _debug:
+    @Pyro4.oneway
+    def ExecuteCommand(self, cmd):
+      print("executing command: {0}".format(cmd))
+      self._gameControl.ExecuteCommand( cmd)
 
 ## can be started directly from running this script,
 ##   but handled cleanly starting from communication/server_threads.py

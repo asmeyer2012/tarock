@@ -51,13 +51,14 @@ class GameControl:
         print(card)
       raise ValueError("deck has wrong number of cards")
 
-  def ChangeState(self, state):
+  def ChangeState(self, state, verbose=True):
     if not( isinstance( state, GameState)):
       self._server.BroadcastMessage(
         "ChangeState called with undefined state: \"{0}\"".format( state))
       raise TypeError("undefined state")
     self._gameState = state
-    self._server.BroadcastMessage("Game entered state {0}".format( state))
+    if verbose:
+      self._server.BroadcastMessage("Game entered state {0}".format( state))
 
   ## getter function for GameState
   def State(self):

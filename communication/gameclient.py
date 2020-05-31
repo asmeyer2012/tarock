@@ -8,7 +8,7 @@ from threading import Thread
 import Pyro4
 import Pyro4.util
 
-from communication.gameserver import GameServer
+from communication.gameserver import GameServer,_debug
 from communication.menu import Menu
 
 sys.excepthook = Pyro4.util.excepthook
@@ -43,6 +43,14 @@ class GameClient:
     self._daemon.close()
     print('client daemon closed')
 
+  ## for recovery purposes
+  def CheckConnection(self):
+    return True
+
+  ## for debugging purposes
+  def ThrowException(self):
+    raise ValueError("exception thrown intentionally")
+
   ## build the default menu that is always available to client
   ## masking entries is controlled by GameServer
   def BuildDefaultMenu(self):
@@ -50,6 +58,7 @@ class GameClient:
     self._menus['default'] = Menu()
     self._menus['default'].AddEntry( 'quit', "Exit the program")
     self._menus['default'].AddEntry( 'master', "Request master action", True)
+    self._menus['default'].AddEntry( 'exception', "Throw intentional exception", not( _debug))
     self._menus['default'].AddEntry( '', "Ready", True)
     self._menus['default'].AddEntry( 'end', "End the game", True)
     self._menus['default'].AddEntry( '2p', "Start two player game", True) ## debugging purposes
@@ -97,6 +106,9 @@ class GameClient:
   def ProcessMenuEntry(self, req, verbose=True):
     if req == 'quit':
       return True
+    if req == 'exception' and _debug:
+      self.ThrowException()
+      return False
     valid = False
     for tag in self._menus.keys():
       if self._menus[ tag].GetSelection( req):
@@ -166,7 +178,18 @@ class GameClient:
         print("you must type \"quit\" to terminate stdin process")
 
 if __name__=="__main__":
-  me = GameClient()
+  success = False
+  while not( success):
+    try:
+      me = GameClient()
+      success = True
+    ## attempt to recover from errors
+    except Pyro4.errors.ConnectionClosedError:
+      print("attempting to recover from closed connection")
+      server = Pyro4.Proxy("PYRONAME:GameServer")
+      if not( server.RecoverBrokenConnection()):
+        print("recovery unsuccessful")
+        raise ## reraise previous exception
 
   ## windows does not treat stdin like windows
   ## need a forked thread that explicitly listens to stdin and sends to a socket
