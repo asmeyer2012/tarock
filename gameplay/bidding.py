@@ -104,6 +104,7 @@ class Bidding:
           self.EndBidding()
       self.NextActivePlayer()
     elif name == self._bidders['active'] and tag == 'kings':
+      self._server._gameControl._contract.SetKing( req)
       self._server._playerHooks[ self._bidders['active']].DeactivateMenu( 'kings')
 
   def NextActivePlayer(self):
