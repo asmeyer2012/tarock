@@ -1,5 +1,5 @@
 from communication.menu import Menu
-from gameplay.contracts import TeamContract
+from gameplay.contracts import Contract
 
 class Bidding:
   def __init__(self, server):
@@ -82,6 +82,7 @@ class Bidding:
     self._server._playerHooks[ self._bidders['active']].DeactivateMenu( 'bidding')
     self._server.BroadcastMessage(
       '{0} is Declarer with Bid {1}.'.format(self._bidders['leading'], self._leadingBid))
+    self._server._gameControl.SetContract( self._leadingBid)
     self.DeclareKing()
 
   ## handle message forwarding to appropriate class object
@@ -93,6 +94,7 @@ class Bidding:
         ## in this case, the incoming bid was the final bid
         if len(self._bidders['passed']) == len(self._playerNames)-1:
           self.EndBidding()
+          return ## don't allow a NextActivePlayer call
       ## if the bid was 'pass'
       else:
         self._bidders['passed'].append( name)
@@ -128,17 +130,6 @@ class Bidding:
 
   def ActiveBidder(self):
     return self._bidders['active']
-
-  def AnnouncementMenu(self):
-    return self._announcementMenu()
-
-  def StartAnnouncements(self):
-    return
-
-  def GetContract(self, req):
-    if req == '3':
-      return TeamContract( 3, self._leadingBidder)
-    raise ValueError("invalid contract")
 
   ## add cards to talon when dealing
   ## just save here for now; will be handled by contract later

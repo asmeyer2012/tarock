@@ -6,6 +6,7 @@ from communication.menu import Menu
 from gameplay.player import Player
 from gameplay.cards import CardName,CardSuit,Card
 from gameplay.bidding import Bidding
+from gameplay.contracts import Contract
 
 ## enumerated class of game states
 class GameState(Enum):
@@ -25,7 +26,7 @@ class GameControl:
     self._playerHooks = {} ## Player() class instances
     self.BuildDeck() ## build reference deck
     self._bidding = Bidding(self._server) ## control class object
-    #self._contract = Contract(self._server) ## control class object
+    self._contract = Contract(self._server) ## control class object
 
   def BuildDeck(self):
     self._deck = []
@@ -160,6 +161,9 @@ class GameControl:
       card = self._deck[i]
       name = self._playerNames[i%Nplayer]
       self._playerHooks[ name].AddToHand( card)
+
+  def SetContract(self,contract):
+    self._contract.SetContract( contract)
 
   def CleanupRound(self):
     pass
