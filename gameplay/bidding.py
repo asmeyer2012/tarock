@@ -29,15 +29,16 @@ class Bidding:
     self._bidMenu.AddEntry( 'CV', 'Color Valat Without')
     self._bidMenu.AddEntry( 'V',  'Valat Without')
     self._bidMenu.Deactivate()
-    #self._announcementMenu = Menu()
-    #self._announcementMenu.AddEntry( 'pass', 'No announcement')
-    #self._announcementMenu.AddEntry( 'kontra', 'Kontra game')
     self._kingMenu = Menu()
     self._kingMenu.AddEntry( 'diamond', 'King of Diamonds')
     self._kingMenu.AddEntry( 'spade', 'King of Spades')
     self._kingMenu.AddEntry( 'heart', 'King of Hearts')
     self._kingMenu.AddEntry( 'club', 'King of Clubs')
     self._kingMenu.Deactivate()
+    self._announcementMenu = Menu()
+    self._announcementMenu.AddEntry( 'pass', 'No announcement')
+    self._announcementMenu.AddEntry( 'kontra', 'Kontra game')
+    self._announcementMenu.Deactivate()
 
   def MenuMask(self, name, tag):
     if tag == 'bidding':
@@ -65,6 +66,8 @@ class Bidding:
       return self._bidMenu
     if tag == 'kings':
       return self._kingMenu
+    if tag == 'announcement':
+      return self._announcementMenu
 
   def StartBidding(self):
     self._bidders['passed'] = []
@@ -85,6 +88,25 @@ class Bidding:
     self._server._gameControl.SetContract( self._leadingBid)
     self.DeclareKing()
 
+  def DeclareKing(self):
+    kingcontracts = ["3", "2", "1"]
+    if self._leadingBid in kingcontracts:
+      self._server.BroadcastMenu( 'kings')
+      self._bidders['active'] = self._bidders['leading']
+      self._server._playerHooks[ self._bidders['active']].ActivateMenu( 'kings')
+    else:
+      ## skip to announcements
+      self.MakeAnnouncements()
+
+  def MakeAnnouncements(self):
+    self._server.BroadcastMessage("starting announcements")
+    self._bidders['passed'] = []
+    self._bidders['active'] = self._bidders['first']
+    i = self._playerNames.index( self._bidders['first'])
+    ## distribute bidding menu
+    self._server.BroadcastMenu( 'announcement')
+    self._server._playerHooks[ self._bidders['active']].ActivateMenu( 'announcement')
+
   ## handle message forwarding to appropriate class object
   def ProcessMenuEntry(self, name, tag, req):
     if name == self._bidders['active'] and tag == 'bidding':
@@ -102,27 +124,30 @@ class Bidding:
           self._server.BroadcastMessage('Final Bid')
         elif len(self._bidders['passed']) == len(self._playerNames):
           self.EndBidding()
-      self.NextActivePlayer()
+      self.NextActivePlayer( 'bidding')
     elif name == self._bidders['active'] and tag == 'kings':
       self._server._gameControl._contract.SetKing( req)
       self._server._playerHooks[ self._bidders['active']].DeactivateMenu( 'kings')
+      self.MakeAnnouncements()
+    elif tag == 'announcement':
+      if req != 'pass':
+        pass ## TODO: implement
+      ## if the bid was 'pass'
+      else:
+        self._bidders['passed'].append( name)
+        if len(self._bidders['passed']) == len(self._playerNames):
+          return
+      self.NextActivePlayer( 'announcement')
 
-  def NextActivePlayer(self):
+  def NextActivePlayer(self, tag):
     i = self._playerNames.index( self._bidders['active'])
     Nplayer = len( self._playerNames)
-    self._server._playerHooks[ self._bidders['active']].DeactivateMenu( 'bidding')
+    self._server._playerHooks[ self._bidders['active']].DeactivateMenu( tag)
     for k in range(1,Nplayer+1):
       if (self._playerNames[(Nplayer+i-k)%Nplayer] not in self._bidders['passed'] ):
         self._bidders['active'] = self._playerNames[(Nplayer+i-k)%Nplayer]
-        self._server._playerHooks[ self._bidders['active']].ActivateMenu( 'bidding')
+        self._server._playerHooks[ self._bidders['active']].ActivateMenu( tag)
         return
-
-  def DeclareKing(self):
-    kingcontracts = ["3", "2", "1"]
-    if self._leadingBid in kingcontracts:
-      self._server.BroadcastMenu( 'kings')
-      self._bidders['active'] = self._bidders['leading']
-      self._server._playerHooks[ self._bidders['active']].ActivateMenu( 'kings')
 
   def SetPlayers(self,playerNames):
     self._playerNames = playerNames

@@ -72,9 +72,7 @@ class GameControl:
 
   ## return the data to build a Menu instance
   def GetMenu(self, name, tag):
-    if tag == 'bidding':
-      return self._bidding.GetMenu( name, tag)
-    if tag == 'kings':
+    if tag in ['bidding','kings','announcement']:
       return self._bidding.GetMenu( name, tag)
     if tag == 'hand':
       return self._playerHooks[ name].GetMenu( tag)
@@ -115,7 +113,7 @@ class GameControl:
           self._server.BroadcastMenu( 'hand')
           self.ChangeState( GameState.BIDDING)
           self.StartBidding()
-    elif tag in ['bidding','kings']:
+    elif tag in ['bidding','kings','announcement']:
       self._bidding.ProcessMenuEntry( name, tag, req)
 
   ## send score to every player
