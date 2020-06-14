@@ -59,6 +59,8 @@ class Bidding:
         for c in out:
           mask.add(c)
       return mask
+    elif tag == 'announcement':
+      pass ## TODO: implement
     return set([])
 
   def GetMenu(self, name, tag):
@@ -85,7 +87,7 @@ class Bidding:
     self._server._playerHooks[ self._bidders['active']].DeactivateMenu( 'bidding')
     self._server.BroadcastMessage(
       '{0} is Declarer with Bid {1}.'.format(self._bidders['leading'], self._leadingBid))
-    self._server._gameControl.SetContract( self._leadingBid)
+    self._server._gameControl.SetContract( self._leadingBid, self._talon)
     self.DeclareKing()
 
   def DeclareKing(self):
@@ -94,6 +96,18 @@ class Bidding:
       self._server.BroadcastMenu( 'kings')
       self._bidders['active'] = self._bidders['leading']
       self._server._playerHooks[ self._bidders['active']].ActivateMenu( 'kings')
+    else:
+      ## skip to talon
+      self.HandleTalon()
+
+  def HandleTalon(self):
+    taloncontracts = ["3", "2", "1", "S3", "S2", "S1"]
+    if self._leadingBid in taloncontracts:
+      self._server.BroadcastMenu( 'talon')
+      for i in range( self._server._gameControl._contract.Npiles()):
+        self._server.BroadcastMenu( 'pile{}'.format(i))
+      self._bidders['active'] = self._bidders['leading']
+      self._server._playerHooks[ self._bidders['active']].ActivateMenu( 'talon')
     else:
       ## skip to announcements
       self.MakeAnnouncements()
@@ -128,7 +142,9 @@ class Bidding:
     elif name == self._bidders['active'] and tag == 'kings':
       self._server._gameControl._contract.SetKing( req)
       self._server._playerHooks[ self._bidders['active']].DeactivateMenu( 'kings')
-      self.MakeAnnouncements()
+      self.HandleTalon()
+    elif name == self._bidders['active'] and tag == 'talon':
+      self._server._gameControl._contract.ProcessMenuEntry( name, tag, req)
     elif tag == 'announcement':
       if req != 'pass':
         pass ## TODO: implement

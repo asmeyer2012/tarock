@@ -74,6 +74,8 @@ class GameControl:
   def GetMenu(self, name, tag):
     if tag in ['bidding','kings','announcement']:
       return self._bidding.GetMenu( name, tag)
+    if tag == 'talon' or tag[:4] == 'pile':
+      return self._contract.GetMenu( name, tag)
     if tag == 'hand':
       return self._playerHooks[ name].GetMenu( tag)
 
@@ -88,8 +90,10 @@ class GameControl:
           mask.discard('')
         mask.discard('end')
       return mask
-    elif tag == 'bidding':
+    elif tag in ['bidding','kings','announcement']:
       return self._bidding.MenuMask( name, tag)
+    elif tag == 'talon' or tag[:4] == 'pile':
+      return self._contract.MenuMask( name, tag)
     elif tag == 'hand':
       return self._playerHooks[ name].MenuMask( tag)
     else:
@@ -115,6 +119,8 @@ class GameControl:
           self.StartBidding()
     elif tag in ['bidding','kings','announcement']:
       self._bidding.ProcessMenuEntry( name, tag, req)
+    elif tag == 'talon' or tag[:4] == 'pile':
+      self._contract.ProcessMenuEntry( name, tag, req)
 
   ## send score to every player
   def BroadcastScore(self):
@@ -160,8 +166,8 @@ class GameControl:
       name = self._playerNames[i%Nplayer]
       self._playerHooks[ name].AddToHand( card)
 
-  def SetContract(self,contract):
-    self._contract.SetContract( contract)
+  def SetContract(self, contract, talon):
+    self._contract.SetContract( contract, talon)
 
   def CleanupRound(self):
     pass
