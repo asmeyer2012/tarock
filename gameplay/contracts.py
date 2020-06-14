@@ -13,9 +13,9 @@ class Contract:
   def SetContract(self, contract, talon):
     self._talon = talon
     if contract in ['3','2','1']:
-      self._contract = TeamContract( int( contract), talon)
+      self._contract = TeamContract( self._server, int( contract), talon)
     else:
-      self._contract = DummyContract( talon)
+      self._contract = DummyContract( self._server, talon)
     self._contractSet = True
     self._server.BroadcastMessage( "set contract to {}".format( self._contract._name))
 
@@ -61,8 +61,9 @@ class Contract:
 
 ## dummy class for proof-of-principle implementation
 class DummyContract:
-  def __init__(self, talon):
+  def __init__(self, server, talon):
     self._name = "DummyContract"
+    self._server = server
     self._talon = talon
     self._pileMenus = []
     self.DistributeTalon()
@@ -111,6 +112,7 @@ class DummyContract:
       n = int( req[-1])
       self._server._gameControl._bidders['active'].DeactivateMenu('talon')
       self._server.BroadcastMessage("{} picked {}".format( name, req))
+    raise ValueError("ProcessMenuEntry")
 
   def SetKing(self, king):
     raise ValueError("{} not a valid contract for calling a king".format( self._name))
@@ -118,8 +120,9 @@ class DummyContract:
 ## copy of DummyContract, except with kings implementation
 ## TODO: fix up into actual contract
 class TeamContract:
-  def __init__(self, num, talon):
+  def __init__(self, server, num, talon):
     self._name = "TeamContract"
+    self._server = server
     self._num = num
     self._king = None
     self._talon = talon
@@ -168,6 +171,10 @@ class TeamContract:
       return self._pileMenus[n]
 
   def ProcessMenuEntry(self, name, tag, req):
+    if tag == 'talon' and req[:4] == 'pile':
+      n = int( req[-1])
+      self._server.BidderHook('active').DeactivateMenu('talon')
+      self._server.BroadcastMessage("{} picked {}".format( name, req))
     raise ValueError("ProcessMenuEntry")
 
   def SetKing(self, king):

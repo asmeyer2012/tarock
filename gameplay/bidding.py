@@ -81,21 +81,24 @@ class Bidding:
     self._leadingBid = None
     ## distribute bidding menu
     self._server.BroadcastMenu( 'bidding')
-    self._server._playerHooks[ self._bidders['active']].ActivateMenu( 'bidding')
+    self.BidderHook('active').ActivateMenu( 'bidding')
 
   def EndBidding(self):
-    self._server._playerHooks[ self._bidders['active']].DeactivateMenu( 'bidding')
+    self.BidderHook('active').DeactivateMenu( 'bidding')
     self._server.BroadcastMessage(
       '{0} is Declarer with Bid {1}.'.format(self._bidders['leading'], self._leadingBid))
     self._server._gameControl.SetContract( self._leadingBid, self._talon)
     self.DeclareKing()
+
+  def BidderHook(self, tag):
+    return self._server._playerHooks[ self._bidders[tag]]
 
   def DeclareKing(self):
     kingcontracts = ["3", "2", "1"]
     if self._leadingBid in kingcontracts:
       self._server.BroadcastMenu( 'kings')
       self._bidders['active'] = self._bidders['leading']
-      self._server._playerHooks[ self._bidders['active']].ActivateMenu( 'kings')
+      self.BidderHook('active').ActivateMenu( 'kings')
     else:
       ## skip to talon
       self.HandleTalon()
@@ -107,7 +110,7 @@ class Bidding:
       for i in range( self._server._gameControl._contract.Npiles()):
         self._server.BroadcastMenu( 'pile{}'.format(i))
       self._bidders['active'] = self._bidders['leading']
-      self._server._playerHooks[ self._bidders['active']].ActivateMenu( 'talon')
+      self.BidderHook('active').ActivateMenu( 'talon')
     else:
       ## skip to announcements
       self.MakeAnnouncements()
@@ -119,7 +122,7 @@ class Bidding:
     i = self._playerNames.index( self._bidders['first'])
     ## distribute bidding menu
     self._server.BroadcastMenu( 'announcement')
-    self._server._playerHooks[ self._bidders['active']].ActivateMenu( 'announcement')
+    self.BidderHook('active').ActivateMenu( 'announcement')
 
   ## handle message forwarding to appropriate class object
   def ProcessMenuEntry(self, name, tag, req):
@@ -141,7 +144,7 @@ class Bidding:
       self.NextActivePlayer( 'bidding')
     elif name == self._bidders['active'] and tag == 'kings':
       self._server._gameControl._contract.SetKing( req)
-      self._server._playerHooks[ self._bidders['active']].DeactivateMenu( 'kings')
+      self.BidderHook('active').DeactivateMenu( 'kings')
       self.HandleTalon()
     elif name == self._bidders['active'] and tag == 'talon':
       self._server._gameControl._contract.ProcessMenuEntry( name, tag, req)
@@ -158,11 +161,11 @@ class Bidding:
   def NextActivePlayer(self, tag):
     i = self._playerNames.index( self._bidders['active'])
     Nplayer = len( self._playerNames)
-    self._server._playerHooks[ self._bidders['active']].DeactivateMenu( tag)
+    self.BidderHook('active').DeactivateMenu( tag)
     for k in range(1,Nplayer+1):
       if (self._playerNames[(Nplayer+i-k)%Nplayer] not in self._bidders['passed'] ):
         self._bidders['active'] = self._playerNames[(Nplayer+i-k)%Nplayer]
-        self._server._playerHooks[ self._bidders['active']].ActivateMenu( tag)
+        self.BidderHook('active').ActivateMenu( tag)
         return
 
   def SetPlayers(self,playerNames):

@@ -113,6 +113,10 @@ class GameServer(object):
       self.CheckPlayerConnection( name)
     return True
 
+  ## ease of data access
+  def BidderHook(self, tag):
+    return self._gameControl._bidding.BidderHook( tag)
+
   ## only to be used for testing purposes!
   if _debug:
     @Pyro4.oneway
