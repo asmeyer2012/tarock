@@ -122,7 +122,8 @@ class GameClient:
 
   ## print message only to this client
   def PrintMessage(self,msg):
-    self._menus['messages'].AddEntry( str( time.ctime()), msg)
+    ## time.time() is seconds since epoch; importantly contains <sec precision
+    self._menus['messages'].AddEntry( str( time.time()), msg)
 
   def MainProcess(self,sleepTimeSec=3):
     self.RemaskMenus()
