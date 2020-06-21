@@ -90,6 +90,7 @@ class Bidding:
     self._server._gameControl.SetContract( self._leadingBid, self._talon)
     self.DeclareKing()
 
+  ## return a hook to the client
   def BidderHook(self, tag):
     return self._server._clientHooks[ self._bidders[tag]]
 

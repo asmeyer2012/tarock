@@ -117,6 +117,14 @@ class GameServer(object):
   def BidderHook(self, tag):
     return self._gameControl._bidding.BidderHook( tag)
 
+  ## ease of data access
+  def ClientHook(self, name):
+    return self._clientHooks[ name]
+
+  ## ease of data access
+  def PlayerHook(self, name):
+    return self._gameControl._playerHooks[ name]
+
   ## only to be used for testing purposes!
   if _debug:
     @Pyro4.oneway

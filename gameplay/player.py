@@ -9,7 +9,8 @@ class Player:
     #self._radliRemaining = 0
     #self._radliFinished = 0
     self._handMenu = Menu(info=True)
-    self._hand = {}   ## Card class objects, keys are Card.ShortName()
+    self._hand = {}      ## Card class objects, keys are Card.ShortName()
+    self._talonHand = {} ## Cards from talon that are assigned to Player
     #self._tricks = {} ## Card class objects won in tricks
 
   def SetScore(self,score):
@@ -26,9 +27,12 @@ class Player:
   #  self._radliRemaining -= 1
 
   ## add cards to hand when dealing or handling talon
-  def AddToHand(self,card):
+  def AddToHand(self,card,fromTalon=False):
     self._handMenu.AddEntry( card.ShortName(), card.LongName())
-    self._hand[ card.ShortName()] = card
+    if fromTalon: ## keep track of which cards come from talon
+      self._talonHand[ card.ShortName()] = card
+    else:
+      self._hand[ card.ShortName()] = card
 
   def MenuMask(self, tag):
     if tag == 'hand':
@@ -37,6 +41,11 @@ class Player:
   def GetMenu(self, tag):
     if tag == 'hand':
       return self._handMenu
+
+  ## convert the hand from info-only to menu
+  def HandToMenu(self):
+    self._handMenu.SetToMenu()
+    self._server.BuildMenu( self._name, 'hand')
 
   ### add cards to hand when dealing or handling talon
   #def AddToTricks(self,card):

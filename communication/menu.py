@@ -39,6 +39,24 @@ class Menu:
         print("invalid request \"{0}\"".format( req))
     return False
 
+  def keys( self, masked=True):
+    if masked: ## build a new dictionary from only the unmasked keys
+      return {key:item for (key,item) in self._entries.items()
+        if not( key in self._mask)}.keys()
+    return self._entries.keys()
+
+  def values( self, masked=True):
+    if masked:
+      return {key:item for (key,item) in self._entries.items()
+        if not( key in self._mask)}.values()
+    return self._entries.values()
+
+  def items( self, masked=True):
+    if masked:
+      return {key:item for (key,item) in self._entries.items()
+        if not( key in self._mask)}.items()
+    return self._entries.items()
+
   def IsActive( self):
     return self._active
 
@@ -47,6 +65,12 @@ class Menu:
 
   def Deactivate( self):
     self._active = False
+
+  def SetToMenu( self):
+    self._info = False
+
+  def SetToInfo( self):
+    self._info = True
 
   ## add an entry to the menu
   def AddEntry( self, key, entry, masked=False):

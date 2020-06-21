@@ -1,4 +1,5 @@
 from random import shuffle
+from time import sleep
 
 from communication.menu import Menu
 
@@ -173,9 +174,18 @@ class TeamContract:
   def ProcessMenuEntry(self, name, tag, req):
     if tag == 'talon' and req[:4] == 'pile':
       n = int( req[-1])
-      self._server.BidderHook('active').DeactivateMenu('talon')
+      self._server.BidderHook('leading').DeactivateMenu('talon')
       self._server.BroadcastMessage("{} picked {}".format( name, req))
-    raise ValueError("ProcessMenuEntry")
+      for shortName,longName in self._pileMenus[ n].items():
+        card = self._talon[ shortName]
+        self._server.BroadcastMessage("{} picked up {}".format( name, longName))
+        self._server.PlayerHook( name).AddToHand( card, fromTalon=True)
+      ## refresh the menu
+      self._server.PlayerHook( name).HandToMenu()
+      self._server.ClientHook( name).PrintMessage(
+        "YOUR TURN: choose {} cards to lay down".format( self._num))
+    elif tag == 'hand':
+      raise ValueError("not implemented")
 
   def SetKing(self, king):
     self._king = king
