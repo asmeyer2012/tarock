@@ -124,10 +124,10 @@ class GameControl:
 
   ## send score to every player
   def BroadcastScore(self):
-    msg = "  -- Scores:\n"
+    msg = "   -- Scores:"
     for name in self._playerNames:
       score = self._playerHooks[ name].GetScore()
-      msg = msg + "> {0:16s}: {1:>4d}\n".format(name,score)
+      msg = msg + "\n> {0:16s}: {1:>4d}".format(name,score)
     self._server.BroadcastMessage(msg)
 
   def StartGame(self):
