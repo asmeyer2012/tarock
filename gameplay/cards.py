@@ -48,15 +48,15 @@ def ShortName( name):
   return {
     CardName.UNDEFINED: 'udf',
     CardName.PAGAT: 'pgt',
-    CardName.ACE: '01',
-    CardName.TWO: '02',
-    CardName.THREE: '03',
-    CardName.FOUR: '04',
-    CardName.FIVE: '05',
-    CardName.SIX: '06',
-    CardName.SEVEN: '07',
-    CardName.EIGHT: '08',
-    CardName.NINE: '09',
+    CardName.ACE: '1',
+    CardName.TWO: '2',
+    CardName.THREE: '3',
+    CardName.FOUR: '4',
+    CardName.FIVE: '5',
+    CardName.SIX: '6',
+    CardName.SEVEN: '7',
+    CardName.EIGHT: '8',
+    CardName.NINE: '9',
     CardName.TEN: '10',
     CardName.ELEVEN: '11',
     CardName.TWELVE: '12',
@@ -100,7 +100,8 @@ class Card:
   def Suit(self):
     return self._suit
   def ShortName(self):
-    return "{0:3}/{1:3}".format( ShortSuit( self._suit), ShortName( self._name))
+    #return "{0:3}/{1:3}".format( ShortSuit( self._suit), ShortName( self._name))
+    return "{0:3}/{1}".format( ShortSuit( self._suit), ShortName( self._name))
   def LongName(self):
     return self.__str__()
   def __str__(self):
