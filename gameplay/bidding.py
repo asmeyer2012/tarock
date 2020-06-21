@@ -91,7 +91,7 @@ class Bidding:
     self.DeclareKing()
 
   def BidderHook(self, tag):
-    return self._server._playerHooks[ self._bidders[tag]]
+    return self._server._clientHooks[ self._bidders[tag]]
 
   def DeclareKing(self):
     kingcontracts = ["3", "2", "1"]

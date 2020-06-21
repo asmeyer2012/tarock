@@ -12,7 +12,7 @@ _debug = True
 @Pyro4.behavior(instance_mode="single")
 class GameServer(object):
   def __init__(self):
-    self._playerHooks = {}
+    self._clientHooks = {}
     self._playerUris = {}
     self._gameControl = GameControl(self)
 
@@ -23,8 +23,8 @@ class GameServer(object):
   ## send the same message to all players
   @Pyro4.oneway
   def BroadcastMessage(self,msg):
-    for name in self._playerHooks:
-      self._playerHooks[ name].PrintMessage( msg)
+    for name in self._clientHooks:
+      self._clientHooks[ name].PrintMessage( msg)
 
   ## debugging function
   @Pyro4.oneway
@@ -39,13 +39,13 @@ class GameServer(object):
 
   ## send Menu to all players
   def BroadcastMenu(self, tag):
-    for name in self._playerHooks.keys():
+    for name in self._clientHooks.keys():
       self.BuildMenu( name, tag)
 
   ## ping the client telling them to request Menu
   @Pyro4.oneway
   def BuildMenu(self, name, tag):
-    self._playerHooks[ name].BuildMenu( tag)
+    self._clientHooks[ name].BuildMenu( tag)
 
   ## return the data to build a Menu instance
   def GetMenu(self, name, tag):
@@ -58,7 +58,7 @@ class GameServer(object):
   ## add a player to the registry
   ## no communication with new player here! will cause process hang
   def RegisterPlayer(self, name, uri):
-    if name in self._playerHooks.keys():
+    if name in self._clientHooks.keys():
       ## if player is still active, can't take this name
       if self.CheckPlayerConnection( name):
         return False
@@ -70,14 +70,14 @@ class GameServer(object):
       self._gameControl.ChangeState( GameState.ROUNDSTART) ## internal BroadcastMessage
     ## complete registration of player
     self._playerUris[ name] = uri
-    self._playerHooks[ name] = Pyro4.Proxy( uri)
+    self._clientHooks[ name] = Pyro4.Proxy( uri)
     print( "registered player {0}".format( name))
     return True
 
   ## when a player leaves, remove them from the registry
   @Pyro4.oneway
   def UnregisterPlayer(self, name, verbose=True):
-    del self._playerHooks[ name]
+    del self._clientHooks[ name]
     del self._playerUris[ name]
     if verbose:
       print( "unregistered player {0}".format( name))
@@ -92,12 +92,12 @@ class GameServer(object):
 
   ## get list of player names
   def GetPlayers(self):
-    return list( self._playerHooks.keys())
+    return list( self._clientHooks.keys())
 
   ## check if player is connected. if not, unregister them
   def CheckPlayerConnection(self, name):
     try:
-      self._playerHooks[ name]._pyroBind()
+      self._clientHooks[ name]._pyroBind()
       print("player \"{0}\" is still active".format( name))
       return True
     except Pyro4.errors.CommunicationError:
@@ -108,8 +108,8 @@ class GameServer(object):
 
   ## remove players that have disconnected prematurely
   def RecoverBrokenConnection(self):
-    print( self._playerHooks)
-    for name in list( self._playerHooks.keys()):
+    print( self._clientHooks)
+    for name in list( self._clientHooks.keys()):
       self.CheckPlayerConnection( name)
     return True
 
