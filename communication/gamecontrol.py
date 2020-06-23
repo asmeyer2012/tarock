@@ -143,7 +143,7 @@ class GameControl:
     if not( name in self._playerNames):
       self._server.BroadcastMessage("player {0} in seat {1}".format( name, i))
       self._playerNames.append( name)
-      self._playerHooks[ name] = Player( name, self)
+      self._playerHooks[ name] = Player( name, self._server)
     if len( self._playerNames) == 2:
       self.BroadcastScore()
       self._bidding.SetPlayers( self._playerNames)

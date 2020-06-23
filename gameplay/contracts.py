@@ -185,7 +185,14 @@ class TeamContract:
       self._server.ClientHook( name).PrintMessage(
         "YOUR TURN: choose {} cards to lay down".format( self._num))
     elif tag == 'hand':
-      raise ValueError("not implemented")
+      Ndiscard = self._server.PlayerHook( name).DiscardFromHand( req)
+      if Ndiscard == self._num:
+        ## go to announcements
+        self._server.PlayerHook( name).HandToInfo()
+        self._server._gameControl._bidding.MakeAnnouncements()
+      else:
+        self._server.ClientHook( name).PrintMessage(
+          "YOUR TURN: choose {} cards to lay down".format( self._num -Ndiscard))
 
   def SetKing(self, king):
     self._king = king

@@ -9,9 +9,9 @@ class Player:
     #self._radliRemaining = 0
     #self._radliFinished = 0
     self._handMenu = Menu(info=True)
-    self._hand = {}      ## Card class objects, keys are Card.ShortName()
-    self._talonHand = {} ## Cards from talon that are assigned to Player
-    #self._tricks = {} ## Card class objects won in tricks
+    self._hand = {}       ## Card class objects, keys are Card.ShortName()
+    self._tricks = {}     ## Card class objects won in tricks
+    self._talonCards = [] ## track cards that came from talon
 
   def SetScore(self,score):
     self._score = score
@@ -26,13 +26,22 @@ class Player:
   #  self._radliFinished += 1
   #  self._radliRemaining -= 1
 
-  ## add cards to hand when dealing or handling talon
+  ## add Card objects to hand when dealing or handling talon
   def AddToHand(self,card,fromTalon=False):
     self._handMenu.AddEntry( card.ShortName(), card.LongName())
+    self._hand[ card.ShortName()] = card
     if fromTalon: ## keep track of which cards come from talon
-      self._talonHand[ card.ShortName()] = card
-    else:
-      self._hand[ card.ShortName()] = card
+      self._talonCards.append( card.ShortName())
+
+  ## lay down cards after taking from talon
+  def DiscardFromHand(self,req):
+    card = self._hand[ req]
+    self._handMenu.MaskEntry( card.ShortName())
+    self._tricks[ req] = card
+    self._server.ClientHook( self._name).PrintMessage(
+      "you laid down {}".format( card.LongName()))
+    self._server.BroadcastMessage("{} laid down a card".format( self._name))
+    return len( self._tricks.keys()) ## used to determine change to announcements
 
   def MenuMask(self, tag):
     if tag == 'hand':
@@ -45,6 +54,11 @@ class Player:
   ## convert the hand from info-only to menu
   def HandToMenu(self):
     self._handMenu.SetToMenu()
+    self._server.BuildMenu( self._name, 'hand')
+
+  ## convert the hand from menu to info-only
+  def HandToInfo(self):
+    self._handMenu.SetToInfo()
     self._server.BuildMenu( self._name, 'hand')
 
   ### add cards to hand when dealing or handling talon
