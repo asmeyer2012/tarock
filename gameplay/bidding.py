@@ -12,10 +12,10 @@ class Bidding:
                        'S3': 40, 'S2': 50, 'S1': 60, 'B': 70,
                        'S0': 80, 'OB': 90, 'CV': 125, 'V': 250}
     self._announcements = {
-      'kontra':      None, 'rekontra':     None,
-      'subkontra':   None, 'mordkontra':   None,
-      'trula':       None, 'kings'     :   None,
-      'king_ultimo': None, 'pagat_ultimo': None,
+      'kontra':      None, 'rekontra':   None,
+      'subkontra':   None, 'mordkontra': None,
+      'trula':       None, 'kings'     : None,
+      'king_ult':    None, 'pagat_ult':  None,
       'valat':       None
       }
     self.InitializeMenus()
@@ -50,8 +50,8 @@ class Bidding:
     self._announcementMenu.AddEntry( 'mordkontra', 'Mordkontra game (x16)')
     self._announcementMenu.AddEntry( 'trula', 'End game in possession of trula')
     self._announcementMenu.AddEntry( 'kings', 'End game in possession of all kings')
-    self._announcementMenu.AddEntry( 'king_ultimo', 'Win called king on last trick')
-    self._announcementMenu.AddEntry( 'pagat_ultimo', 'Win last trick with pagat')
+    self._announcementMenu.AddEntry( 'king_ult', 'Win called king on last trick')
+    self._announcementMenu.AddEntry( 'pagat_ult', 'Win last trick with pagat')
     self._announcementMenu.AddEntry( 'valat', 'Win all tricks')
     self._announcementMenu.Deactivate()
 
@@ -95,10 +95,10 @@ class Bidding:
           mask.discard('trula')
         if self._announcements['kings'] is None:
           mask.discard('kings')
-        if self._announcements['king_ultimo'] is None:
-          mask.discard('king_ultimo')
-        if self._announcements['pagat_ultimo'] is None:
-          mask.discard('pagat_ultimo')
+        if self._announcements['king_ult'] is None:
+          mask.discard('king_ult')
+        if self._announcements['pagat_ult'] is None:
+          mask.discard('pagat_ult')
       return mask
     return set([])
 
