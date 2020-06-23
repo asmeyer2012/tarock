@@ -11,6 +11,13 @@ class Bidding:
     self._contracts = {'K': 0, '3': 10, '2': 20, '1': 30,
                        'S3': 40, 'S2': 50, 'S1': 60, 'B': 70,
                        'S0': 80, 'OB': 90, 'CV': 125, 'V': 250}
+    self._announcements = {
+      'kontra':      None, 'rekontra':     None,
+      'subkontra':   None, 'mordkontra':   None,
+      'trula':       None, 'kings'     :   None,
+      'king_ultimo': None, 'pagat_ultimo': None,
+      'valat':       None
+      }
     self.InitializeMenus()
 
   def InitializeMenus(self):
@@ -37,7 +44,15 @@ class Bidding:
     self._kingMenu.Deactivate()
     self._announcementMenu = Menu()
     self._announcementMenu.AddEntry( 'pass', 'No announcement')
-    self._announcementMenu.AddEntry( 'kontra', 'Kontra game')
+    self._announcementMenu.AddEntry( 'kontra', 'Kontra game (x2)')
+    self._announcementMenu.AddEntry( 'rekontra', 'Rekontra game (x4)')
+    self._announcementMenu.AddEntry( 'subkontra', 'Subkontra game (x8)')
+    self._announcementMenu.AddEntry( 'mordkontra', 'Mordkontra game (x16)')
+    self._announcementMenu.AddEntry( 'trula', 'End game in possession of trula')
+    self._announcementMenu.AddEntry( 'kings', 'End game in possession of all kings')
+    self._announcementMenu.AddEntry( 'king_ultimo', 'Win called king on last trick')
+    self._announcementMenu.AddEntry( 'pagat_ultimo', 'Win last trick with pagat')
+    self._announcementMenu.AddEntry( 'valat', 'Win all tricks')
     self._announcementMenu.Deactivate()
 
   def MenuMask(self, name, tag):
@@ -60,7 +75,31 @@ class Bidding:
           mask.add(c)
       return mask
     elif tag == 'announcement':
-      pass ## TODO: implement
+      mask = set(self._announcementMenu.keys())
+      mask.discard('pass')
+      if self._announcements['valat'] is None:
+        mask.discard('valat')
+        mask.discard('kontra')
+        if not( self._announcements['kontra'] is None):
+          mask.add('kontra')
+          mask.discard('rekontra')
+        if not( self._announcements['rekontra'] is None):
+          mask.add('rekontra')
+          mask.discard('subkontra')
+        if not( self._announcements['subkontra'] is None):
+          mask.add('subkontra')
+          mask.discard('mordkontra')
+        if not( self._announcements['mordkontra'] is None):
+          mask.add('mordkontra')
+        if self._announcements['trula'] is None:
+          mask.discard('trula')
+        if self._announcements['kings'] is None:
+          mask.discard('kings')
+        if self._announcements['king_ultimo'] is None:
+          mask.discard('king_ultimo')
+        if self._announcements['pagat_ultimo'] is None:
+          mask.discard('pagat_ultimo')
+      return mask
     return set([])
 
   def GetMenu(self, name, tag):
@@ -125,6 +164,12 @@ class Bidding:
     self._server.BroadcastMenu( 'announcement')
     self.BidderHook('active').ActivateMenu( 'announcement')
 
+  def EndAnnouncements(self):
+    for name in self._playerNames:
+      self._server.ClientHook( name).DeactivateMenu('announcement')
+    self._server.BroadcastMessage('ending announcements')
+    self._server._gameControl.StartTricks()
+
   ## handle message forwarding to appropriate class object
   def ProcessMenuEntry(self, name, tag, req):
     if name == self._bidders['active'] and tag == 'bidding':
@@ -151,11 +196,14 @@ class Bidding:
       self._server._gameControl._contract.ProcessMenuEntry( name, tag, req)
     elif tag == 'announcement':
       if req != 'pass':
-        pass ## TODO: implement
+        ## TODO: change so more than one announcement can be made by same person at once
+        ## need to have at least two rounds of passing to complete announcement process
+        self._announcements[ req] = name
       ## if the bid was 'pass'
       else:
         self._bidders['passed'].append( name)
         if len(self._bidders['passed']) == len(self._playerNames):
+          self.EndAnnouncements()
           return
       self.NextActivePlayer( 'announcement')
 

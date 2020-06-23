@@ -15,7 +15,8 @@ class GameState(Enum):
   INITIALIZE  =  0 ## assign players, do data initialization
   ROUNDSTART  =  1 ## call for skis round, manipulations of game
   BIDDING     =  2 ## do bidding, call king, talon assignment
-  ROUNDFINISH =  3 ## assign scores, redo hand, clean up
+  TRICKS      =  3 ## play tricks
+  ROUNDFINISH =  4 ## assign scores, redo hand, clean up
 
 class GameControl:
   def __init__(self,server):
@@ -188,6 +189,10 @@ class GameControl:
   @Pyro4.oneway
   def StartBidding(self):
     self._bidding.StartBidding()
+
+  @Pyro4.oneway
+  def StartTricks(self):
+    self.ChangeState( GameState.TRICKS)
 
   ## only to be used for testing purposes!
   def ExecuteCommand(self, cmd):
