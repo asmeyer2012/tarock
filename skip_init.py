@@ -16,6 +16,7 @@ parser.add_argument('input_file', help='slot reserved for skip_init.py', nargs='
 parser.add_argument('--bid', help='designate a player bid; last player always gets bid',
   action='store')
 parser.add_argument('--king', help='designate a called king', action='store')
+parser.add_argument('--announcements', help='skip to announcements', action='store_true')
 args = parser.parse_args(sys.argv)
 print(args)
 
@@ -61,12 +62,27 @@ if len( server.GetPlayers()) == 2:
     sleep(_sleepTime) ## give server a chance to catch up
 
   ## specify called king
-  if not( args.king is None):
+  if not( args.king is None) or args.announcements:
+    if args.king is None:
+      args.king = king_suits[0]
     print("fast-forward to talon")
     server.ExecuteCommand("self._bidding.BidderHook('active').DeactivateMenu('kings')")
     server.ExecuteCommand(
       "self.ProcessMenuEntry(self._bidding._bidders['leading'], 'kings', '{}')".format( args.king))
     sleep(_sleepTime) ## give server a chance to catch up
+
+  ## pick a talon pile and randomly ditch cards
+  if args.announcements:
+    print("fast-forward to announcements")
+    server.ExecuteCommand(
+      "self.ProcessMenuEntry(self._bidding._bidders['leading'], 'talon', 'pile0')")
+    sleep(_sleepTime) ## give server a chance to catch up
+    ## pick cards randomly to throw away
+    for i in range( int( args.bid)):
+      server.ExecuteCommand(
+        "self.ProcessMenuEntry(self._bidding._bidders['leading'], 'hand', \
+         list( self._playerHooks[ self._bidding._bidders['leading']]._hand.keys())[{}])".format(i))
+      sleep(3*_sleepTime) ## give server a chance to catch up
 
 me.RequestLoop()
 
