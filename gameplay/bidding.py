@@ -4,10 +4,6 @@ from gameplay.contracts import Contract
 class Bidding:
   def __init__(self, server):
     self._server = server
-    self._bidders = {} ## key is bidder condition, value is name of bidder
-    self._talon = {} ## dictionary to hold talon cards temporarily
-    self._leadingBid = None
-    self._playerNames = []
     self._contracts = {'K': 0, '3': 10, '2': 20, '1': 30,
                        'S3': 40, 'S2': 50, 'S1': 60, 'B': 70,
                        'S0': 80, 'OB': 90, 'CV': 125, 'V': 250}
@@ -18,7 +14,14 @@ class Bidding:
       'king_ult':    None, 'pagat_ult':  None,
       'valat':       None
       }
+    self.Cleanup()
     self.InitializeMenus()
+
+  def Cleanup(self):
+    self._bidders = {} ## key is bidder condition, value is name of bidder
+    self._talon = {} ## dictionary to hold talon cards temporarily
+    self._leadingBid = None
+    self._playerNames = []
 
   def InitializeMenus(self):
     self._bidMenu = Menu()
@@ -217,7 +220,7 @@ class Bidding:
         self.BidderHook('active').ActivateMenu( tag)
         return
 
-  def SetPlayers(self,playerNames):
+  def SetPlayers(self, playerNames):
     self._playerNames = playerNames
     if self._bidders.get('first',None) is None:
       self._bidders['first'] = self._playerNames[0]
