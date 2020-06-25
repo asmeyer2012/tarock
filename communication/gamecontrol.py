@@ -171,6 +171,7 @@ class GameControl:
 
   def SetContract(self, contract, talon):
     self._contract.SetContract( contract, talon)
+    self._contract.SetPlayers( self._playerNames)
 
   def CleanupRound(self):
     pass
@@ -193,6 +194,8 @@ class GameControl:
   @Pyro4.oneway
   def StartTricks(self):
     self.ChangeState( GameState.TRICKS)
+    self._bidding.DeactivatePileMenus()
+    self._contract.StartTricks()
 
   ## only to be used for testing purposes!
   def ExecuteCommand(self, cmd):

@@ -10,6 +10,8 @@ class Contract:
     self._talon = None
     self._contract = None
     self._contractSet = False
+    self._leadPlayer = None
+    self._activePlayer = None
 
   def SetContract(self, contract, talon):
     self._talon = talon
@@ -23,6 +25,26 @@ class Contract:
   def CheckValid(self):
     if not( self._contractSet):
       raise ValueError("contract not set")
+
+  def SetKing(self, king):
+    self.CheckValid()
+    self._contract.SetKing( king)
+
+  def SetPlayers(self, playerNames):
+    self._playerNames = playerNames
+
+  def NextActivePlayer(self, tag):
+    i = self._playerNames.index( self._activePlayer)
+    Nplayer = len( self._playerNames)
+    self.BidderHook( self._activePlayer).SetToInfo( 'hand')
+    self._activePlayer = self._playerNames[(i+1)%Nplayer]
+    self.BidderHook( self._activePlayer).SetToMenu( 'hand')
+
+  def StartTricks(self):
+    self._leadPlayer = self._server.Bidder( 'first')
+    self._activePlayer = self._leadPlayer
+    self._server.ClientHook( self._activePlayer).SetToMenu( 'hand')
+    self._server.ClientHook( self._activePlayer).PrintMessage( "YOUR START: pick a card to play")
 
   def Npiles(self):
     self.CheckValid()
@@ -55,10 +77,6 @@ class Contract:
   def ProcessMenuEntry(self, name, tag, req):
     self.CheckValid()
     self._contract.ProcessMenuEntry( name, tag, req)
-
-  def SetKing(self, king):
-    self.CheckValid()
-    self._contract.SetKing( king)
 
 ## dummy class for proof-of-principle implementation
 class DummyContract:

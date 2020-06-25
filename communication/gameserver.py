@@ -117,11 +117,12 @@ class GameServer(object):
   def BidderHook(self, tag):
     return self._gameControl._bidding.BidderHook( tag)
 
-  ## ease of data access
+  def Bidder(self, tag):
+    return self._gameControl._bidding.Bidder( tag)
+
   def ClientHook(self, name):
     return self._clientHooks[ name]
 
-  ## ease of data access
   def PlayerHook(self, name):
     return self._gameControl._playerHooks[ name]
 

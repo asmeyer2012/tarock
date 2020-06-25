@@ -136,6 +136,10 @@ class Bidding:
   def BidderHook(self, tag):
     return self._server._clientHooks[ self._bidders[tag]]
 
+  ## get the name of the bidder
+  def Bidder(self, tag):
+    return self._bidders[tag]
+
   def DeclareKing(self):
     kingcontracts = ["3", "2", "1"]
     if self._leadingBid in kingcontracts:
@@ -157,6 +161,13 @@ class Bidding:
     else:
       ## skip to announcements
       self.MakeAnnouncements()
+
+  def DeactivatePileMenus(self):
+    taloncontracts = ["3", "2", "1", "S3", "S2", "S1"]
+    if self._leadingBid in taloncontracts:
+      for name in self._playerNames:
+        for i in range( self._server._gameControl._contract.Npiles()):
+          self._server.ClientHook( name).DeactivateMenu( 'pile{}'.format(i))
 
   def MakeAnnouncements(self):
     self._server.BroadcastMessage("starting announcements")

@@ -85,6 +85,14 @@ class GameClient:
   def DeactivateMenu(self, tag):
     self._menus[ tag].Deactivate()
 
+  ## change Menu to info-only
+  def SetToInfo(self, tag):
+    self._menus[ tag].SetToInfo()
+
+  ## reinstate Menu choices
+  def SetToMenu(self, tag):
+    self._menus[ tag].SetToMenu()
+
   ## get rid of a menu that is not relevant
   def RemoveMenu(self, tag):
     del self._menus[ tag]
