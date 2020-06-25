@@ -17,6 +17,7 @@ parser.add_argument('--bid', help='designate a player bid; last player always ge
   action='store')
 parser.add_argument('--king', help='designate a called king', action='store')
 parser.add_argument('--announcements', help='skip to announcements', action='store_true')
+parser.add_argument('--tricks', help='skip to tricks', action='store_true')
 args = parser.parse_args(sys.argv)
 print(args)
 
@@ -62,7 +63,7 @@ if len( server.GetPlayers()) == 2:
     sleep(_sleepTime) ## give server a chance to catch up
 
   ## specify called king
-  if not( args.king is None) or args.announcements:
+  if not( args.king is None) or args.announcements or args.tricks:
     if args.king is None:
       args.king = king_suits[0]
     print("fast-forward to talon")
@@ -72,7 +73,7 @@ if len( server.GetPlayers()) == 2:
     sleep(_sleepTime) ## give server a chance to catch up
 
   ## pick a talon pile and randomly ditch cards
-  if args.announcements:
+  if args.announcements or args.tricks:
     print("fast-forward to announcements")
     server.ExecuteCommand(
       "self.ProcessMenuEntry(self._bidding._bidders['leading'], 'talon', 'pile0')")
@@ -83,6 +84,11 @@ if len( server.GetPlayers()) == 2:
         "self.ProcessMenuEntry(self._bidding._bidders['leading'], 'hand', \
          list( self._playerHooks[ self._bidding._bidders['leading']]._hand.keys())[{}])".format(i))
       sleep(3*_sleepTime) ## give server a chance to catch up
+
+  ## skip over announcements and go to trick playing
+  if args.tricks:
+    print("fast-forward to tricks")
+    server.ExecuteCommand("self._bidding.EndAnnouncements()")
 
 me.RequestLoop()
 
