@@ -61,9 +61,10 @@ class Player:
     self._handMenu.SetToInfo()
     self._server.BuildMenu( self._name, 'hand')
 
-  ### add cards to hand when dealing or handling talon
-  #def AddToTricks(self,card):
-  #  self._tricks[ card.ShortName()] = card
+  ## add cards to hand when dealing or handling talon
+  def TakeTrick(self,trick):
+    for card in trick.values():
+      self._tricks[ card.ShortName()] = card
 
   ### when a card is played or laid down, just mask rather than remove
   #def MaskCard(self,card):

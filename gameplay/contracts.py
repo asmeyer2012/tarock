@@ -12,6 +12,7 @@ class Contract:
     self._contractSet = False
     self._leadPlayer = None
     self._activePlayer = None
+    self._trick = {}
 
   def SetContract(self, contract, talon):
     self._talon = talon
@@ -33,12 +34,18 @@ class Contract:
   def SetPlayers(self, playerNames):
     self._playerNames = playerNames
 
-  def NextActivePlayer(self, tag):
+  def NextActivePlayer(self):
     i = self._playerNames.index( self._activePlayer)
     Nplayer = len( self._playerNames)
-    self.BidderHook( self._activePlayer).SetToInfo( 'hand')
+    self._server.ClientHook( self._activePlayer).SetToInfo( 'hand')
     self._activePlayer = self._playerNames[(i+1)%Nplayer]
-    self.BidderHook( self._activePlayer).SetToMenu( 'hand')
+    self._server.ClientHook( self._activePlayer).SetToMenu( 'hand')
+
+  def NextLeadPlayer(self, winner):
+    self._leadPlayer = winner
+    self._server.ClientHook( self._activePlayer).SetToInfo( 'hand')
+    self._activePlayer = winner
+    self._server.ClientHook( self._activePlayer).SetToMenu( 'hand')
 
   def StartTricks(self):
     self._leadPlayer = self._server.Bidder( 'first')
@@ -51,18 +58,15 @@ class Contract:
     return self._contract.Npiles()
 
   def ValidPlay(self, card, hand, lead):
-    self.CheckValid()
     return self._contract.ValidPlay( card, hand, lead)
 
   def CardValue(self, card):
-    self.CheckValid()
     return self._contract.CardValue( card)
 
   ## return the name of the player who played the winning card
-  ## trick is a dictionary; key=name, value=card
-  def TrickWinner(self, trick, lead):
-    self.CheckValid()
-    return self._contract.TrickWinner( trick)
+  ## trick is a dictionary; key=name, value=Card
+  def TrickWinner(self):
+    return self._contract.TrickWinner( self._trick, self._leadPlayer)
 
   def Cleanup(self):
     self._contract = None
@@ -75,8 +79,29 @@ class Contract:
     return set([])
 
   def ProcessMenuEntry(self, name, tag, req):
-    self.CheckValid()
-    self._contract.ProcessMenuEntry( name, tag, req)
+    print( name, tag, req)
+    if tag == 'play':
+      card = self._server.PlayerHook( name)._hand[ req]
+      if not( self.ValidPlay( name, tag, req)):
+        self._server.ClientHook( name).PrintMessage(
+          "invalid play: {}, choose another card".format( card.LongName()))
+        return
+      self._server.BroadcastMessage("{} played {}".format( name, card.LongName()))
+      card = self._server.PlayerHook( name)._hand[ req]
+      self._server.PlayerHook( name)._handMenu.MaskEntry( req)
+      self._trick[ name] = card
+      if set( list( self._trick.keys())) == set( self._playerNames):
+        winner = self.TrickWinner()
+        self._server.BroadcastMessage("{} won the trick".format( name))
+        self._server.PlayerHook( winner).TakeTrick( self._trick)
+        self._trick = {}
+        self.NextLeadPlayer( winner)
+      else:
+        self.NextActivePlayer()
+    elif tag == 'discard':
+      self._contract.ProcessMenuEntry( name, tag, req)
+    elif tag == 'talon':
+      self._contract.ProcessMenuEntry( name, tag, req)
 
 ## dummy class for proof-of-principle implementation
 class DummyContract:
@@ -117,8 +142,8 @@ class DummyContract:
   def CardValue(self, card):
     return 0
 
-  def TrickWinner(self, trick, lead):
-    return trick.keys()[0]
+  def TrickWinner(self, trick, leadPlayer):
+    return list( trick.keys())[0]
 
   def GetMenu(self, name, tag):
     if tag == 'talon':
@@ -179,8 +204,8 @@ class TeamContract:
   def CardValue(self, card):
     return 0
 
-  def TrickWinner(self, trick, lead):
-    return trick.keys()[0]
+  def TrickWinner(self, trick, leadPlayer):
+    return list( trick.keys())[0]
 
   def GetMenu(self, name, tag):
     if tag == 'talon':
@@ -202,7 +227,7 @@ class TeamContract:
       self._server.PlayerHook( name).HandToMenu()
       self._server.ClientHook( name).PrintMessage(
         "YOUR TURN: choose {} cards to lay down".format( self._num))
-    elif tag == 'hand':
+    elif tag == 'discard':
       Ndiscard = self._server.PlayerHook( name).DiscardFromHand( req)
       if Ndiscard == self._num:
         ## go to announcements

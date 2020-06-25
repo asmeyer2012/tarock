@@ -123,7 +123,9 @@ class GameControl:
     elif tag == 'talon' or tag[:4] == 'pile':
       self._contract.ProcessMenuEntry( name, tag, req)
     elif tag == 'hand' and self.State() == GameState.BIDDING:
-      self._contract.ProcessMenuEntry( name, tag, req)
+      self._contract.ProcessMenuEntry( name, 'discard', req)
+    elif tag == 'hand' and self.State() == GameState.TRICKS:
+      self._contract.ProcessMenuEntry( name, 'play', req)
 
   ## send score to every player
   def BroadcastScore(self):
