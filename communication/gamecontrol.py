@@ -175,8 +175,18 @@ class GameControl:
     self._contract.SetContract( contract, talon)
     self._contract.SetPlayers( self._playerNames)
 
+  def EndRound(self):
+    self.ChangeState( GameState.ROUNDFINISH)
+    self._contract.ScoreRound()
+    self.CleanupRound()
+
   def CleanupRound(self):
-    pass
+    self._contract.Cleanup()
+    self._bidding.Cleanup()
+    self._bidding.NextFirstPlayer()
+    for name in self._playerNames:
+      self._playerHooks[ name].Cleanup()
+    self.ChangeState( GameState.ROUNDSTART)
 
   def Cleanup(self):
     self._playerReady = []

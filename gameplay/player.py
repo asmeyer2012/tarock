@@ -6,12 +6,7 @@ class Player:
     self._name = name
     self._server = server
     self._score = 0
-    #self._radliRemaining = 0
-    #self._radliFinished = 0
-    self._handMenu = Menu(info=True)
-    self._hand = {}       ## Card class objects, keys are Card.ShortName()
-    self._tricks = {}     ## Card class objects won in tricks
-    self._talonCards = [] ## track cards that came from talon
+    self.Cleanup()
 
   def SetScore(self,score):
     self._score = score
@@ -19,12 +14,11 @@ class Player:
   def GetScore(self):
     return self._score
 
-  #def AddRadli(self):
-  #  self._radliRemaining += 1
-
-  #def FinishRadli(self):
-  #  self._radliFinished += 1
-  #  self._radliRemaining -= 1
+  def Cleanup(self):
+    self._handMenu = Menu(info=True)
+    self._hand = {}       ## Card class objects, keys are Card.ShortName()
+    self._tricks = {}     ## Card class objects won in tricks
+    self._talonCards = [] ## track cards that came from talon
 
   ## add Card objects to hand when dealing or handling talon
   def AddToHand(self,card,fromTalon=False):
@@ -62,11 +56,16 @@ class Player:
     self._server.BuildMenu( self._name, 'hand')
 
   ## add cards to hand when dealing or handling talon
-  def TakeTrick(self,trick):
+  def TakeTrick(self, trick):
     for card in trick.values():
       self._tricks[ card.ShortName()] = card
 
-  ### when a card is played or laid down, just mask rather than remove
-  #def MaskCard(self,card):
-  #  self._handMenu.MaskEntry( card.ShortName())
+  def CardsInHand(self):
+    return len( self._handMenu.keys())
+
+  def ScoreTricks(self, contract):
+    cardValueSum = 0
+    for card in self._tricks.values():
+      cardValueSum += contract.CardValue( card)
+    return cardValueSum
 

@@ -44,8 +44,11 @@ class Contract:
   def NextLeadPlayer(self, winner):
     self._leadPlayer = winner
     self._server.ClientHook( self._activePlayer).SetToInfo( 'hand')
-    self._activePlayer = winner
-    self._server.ClientHook( self._activePlayer).SetToMenu( 'hand')
+    if self._server.PlayerHook( self._leadPlayer).CardsInHand() == 0:
+      self._server._gameControl.EndRound()
+    else:
+      self._activePlayer = winner
+      self._server.ClientHook( self._activePlayer).SetToMenu( 'hand')
 
   def StartTricks(self):
     self._leadPlayer = self._server.Bidder( 'first')
@@ -57,20 +60,45 @@ class Contract:
     self.CheckValid()
     return self._contract.Npiles()
 
-  def ValidPlay(self, card, hand, lead):
-    return self._contract.ValidPlay( card, hand, lead)
-
-  def CardValue(self, card):
-    return self._contract.CardValue( card)
+  def ValidPlay(self, name, tag, req):
+    playerHand = self._server.PlayerHook( name)._hand
+    playedCard = playerHand[ req]
+    leadCard   = self._trick.get( self._leadPlayer, None)
+    return self._contract.ValidPlay( playerHand, playedCard, leadCard)
 
   ## return the name of the player who played the winning card
   ## trick is a dictionary; key=name, value=Card
   def TrickWinner(self):
     return self._contract.TrickWinner( self._trick, self._leadPlayer)
 
+  def ScoreRound(self):
+    cardValueSums = {}
+    ## sum card values
+    for name in self._playerNames:
+      cardValueSums[ name] = self._server.PlayerHook( name).ScoreTricks( self._contract)
+    ## sum team values
+    team0 = set([ self._server.Bidder('leading') ])
+    team1 = set( self._playerNames) - team0
+    names = ' and '.join( list( team0))
+    cardValueSums[ 'team0'] = sum([ cardValueSums[ name] for name in team0 ])
+    cardValueSums[ 'team1'] = sum([ cardValueSums[ name] for name in team1 ])
+    diff = cardValueSums[ 'team0'] - cardValueSums[ 'team1']
+    contractValue = self._server.ContractValue() +diff
+    if cardValueSums[ 'team0'] > cardValueSums[ 'team1']:
+      self._server.BroadcastMessage("{} won the round with difference {}".format( names, diff))
+    else:
+      self._server.BroadcastMessage("{} lost the round with difference {}".format( names, diff))
+      contractValue *= -1
+    for name in team0:
+      player = self._server.PlayerHook( name)
+      player.SetScore(player.GetScore() +contractValue)
+    self._server._gameControl.BroadcastScore()
+
   def Cleanup(self):
     self._contract = None
     self._contractSet = False
+    self._leadPlayer = None
+    self._activePlayer = None
 
   def GetMenu(self, name, tag):
     return self._contract.GetMenu( name, tag)
@@ -136,7 +164,7 @@ class DummyContract:
   def Npiles(self):
     return 1
 
-  def ValidPlay(self, card, hand, lead):
+  def ValidPlay(self, hand, play, lead):
     return True
 
   def CardValue(self, card):
@@ -198,7 +226,7 @@ class TeamContract:
   def Npiles(self):
     return len( self._pileMenus)
 
-  def ValidPlay(self, card, hand, lead):
+  def ValidPlay(self, hand, play, lead):
     return True
 
   def CardValue(self, card):

@@ -126,6 +126,9 @@ class GameServer(object):
   def PlayerHook(self, name):
     return self._gameControl._playerHooks[ name]
 
+  def ContractValue(self):
+    return self._gameControl._bidding.ContractValue()
+
   ## only to be used for testing purposes!
   if _debug:
     @Pyro4.oneway

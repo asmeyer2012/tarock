@@ -14,14 +14,14 @@ class Bidding:
       'king_ult':    None, 'pagat_ult':  None,
       'valat':       None
       }
+    self._playerNames = []
+    self._bidders = {} ## key is bidder condition, value is name of bidder
     self.Cleanup()
     self.InitializeMenus()
 
   def Cleanup(self):
-    self._bidders = {} ## key is bidder condition, value is name of bidder
     self._talon = {} ## dictionary to hold talon cards temporarily
     self._leadingBid = None
-    self._playerNames = []
 
   def InitializeMenus(self):
     self._bidMenu = Menu()
@@ -184,6 +184,9 @@ class Bidding:
     self._server.BroadcastMessage('ending announcements')
     self._server._gameControl.StartTricks()
 
+  def ContractValue(self):
+    return self._contracts[ self._leadingBid]
+
   ## handle message forwarding to appropriate class object
   def ProcessMenuEntry(self, name, tag, req):
     if name == self._bidders['active'] and tag == 'bidding':
@@ -230,6 +233,12 @@ class Bidding:
         self._bidders['active'] = self._playerNames[(Nplayer+i-k)%Nplayer]
         self.BidderHook('active').ActivateMenu( tag)
         return
+
+  def NextFirstPlayer(self):
+    Nplayer = len( self._playerNames)
+    i = (self._playerNames.index( self._bidders['first'])+1) %Nplayer
+    self._bidders['first'] = self._playerNames[i]
+    self._server.BroadcastMessage('{} to lead next round'.format( self._bidders['first']))
 
   def SetPlayers(self, playerNames):
     self._playerNames = playerNames
